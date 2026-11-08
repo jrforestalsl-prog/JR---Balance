@@ -154,6 +154,17 @@ input,select{font:inherit;color:var(--ink)}
 #ans .q{color:var(--muted);font-size:12px;margin-bottom:4px}
 #ans .cl{position:absolute;right:8px;top:8px;width:28px;height:28px;border-radius:50%;background:var(--cream);font-size:16px}
 #ans ul{margin:4px 0 0;padding-left:18px}
+#inst{position:fixed;inset:0;z-index:40;background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px calc(120px + env(safe-area-inset-bottom));text-align:center}
+#inst img{width:96px;height:96px}
+#inst h1{font-family:var(--serif);font-weight:400;font-size:30px;color:var(--navy);margin:14px 0 4px}
+#inst p{color:#4A5466;margin:0 0 18px;font-size:15px;line-height:1.45}
+#inst ol{list-style:none;padding:0;margin:0;width:100%;max-width:330px;text-align:left}
+#inst li{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:8px;font-size:15px}
+#inst li b.n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px}
+#inst .sh-i{display:inline-flex;vertical-align:-5px;width:24px;height:24px;border:1.5px solid var(--navy2);border-radius:6px;align-items:center;justify-content:center;color:var(--navy2);font-size:14px;font-weight:700}
+#inst .arrow{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);color:var(--navy);font-size:13px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;animation:bob 1.2s ease-in-out infinite}
+#inst .arrow span{font-size:30px;line-height:1}
+@keyframes bob{50%{transform:translate(-50%,6px)}}
 #toast{position:fixed;left:50%;width:max-content;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 14px 11px 16px;border-radius:14px;font-size:14px;z-index:30;display:flex;gap:12px;align-items:center;max-width:92vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 #toast button{color:#F2C6CF;font-weight:700}
 </style></head><body>
@@ -293,6 +304,21 @@ async function bioOn(){const salt=rnd(32);
  meta.bio={id:b64(id),s:b64(salt),w:b64(await seal(await hkdf(out,"afm-bio"),dekRaw))};saveMeta()}
 $("bioBtn").onclick=async()=>{lErr("");try{const b=meta.bio,out=await prf(ub64(b.id),ub64(b.s));if(!out)throw 0;await finish(await unseal(await hkdf(out,"afm-bio"),ub64(b.w)))}
  catch(e){lErr("No se ha podido con Face ID. Entra con el PIN.")}};
+
+/* En iPhone, si se abre desde Safari, enseña cómo dejarla en la pantalla de inicio (Apple no permite instalar con un toque) */
+(function installHelp(){const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+ const standalone=window.navigator.standalone===true||matchMedia("(display-mode: standalone)").matches;
+ let skip=false;try{skip=sessionStorage.getItem("afm-skip-inst")==="1"}catch(e){}
+ if(!ios||standalone||skip)return;
+ const d=document.createElement("div");d.id="inst";
+ d.innerHTML=`<img src="logo.png" alt=""><h1>Ponla en tu iPhone</h1><p>Solo una vez y queda como una app más, con su icono.</p>
+  <ol><li><b class="n">1</b><span>Toca <span class="sh-i">↑</span> <b>Compartir</b>, abajo en Safari</span></li>
+  <li><b class="n">2</b><span>Baja y toca <b>«Añadir a pantalla de inicio»</b></span></li>
+  <li><b class="n">3</b><span>Toca <b>Añadir</b> y ábrela desde el icono ✨</span></li></ol>
+  <button class="lnk" id="instSkip" style="margin-top:16px">Ahora no, usarla aquí</button>
+  <div class="arrow">Compartir<span>↓</span></div>`;
+ document.body.appendChild(d);
+ $("instSkip").onclick=()=>{try{sessionStorage.setItem("afm-skip-inst","1")}catch(e){}d.remove()}})();
 
 (function initLock(){
  if(!meta||!meta.wl){$("lT").textContent="Bienvenida";$("lS").textContent="Crea un PIN de 4 a 8 números. Lo pedirá siempre al entrar.";busy(false,"Seguir")}
