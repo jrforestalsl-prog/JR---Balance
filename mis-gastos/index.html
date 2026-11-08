@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FEF4EB">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mis gastos">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Mis gastos</title>
+<style>
+:root{--navy:#163763;--navy2:#244C82;--cream:#FEF4EB;--card:#FFFBF7;--line:#EBDDD0;--ink:#1A2A44;--muted:#80838E;--green:#5B7E4B;--green2:#EAF0E4;--rose:#B9506A;--rose2:#F8E6EA;
+ --serif:"Didot","Bodoni 72","Bodoni MT","Playfair Display",Georgia,serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--cream);color:var(--ink);font-family:-apple-system,system-ui,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+body{padding:env(safe-area-inset-top) 0 0}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,select{font:inherit;color:var(--ink)}
+.hide{display:none!important}
+.serif{font-family:var(--serif)}
+
+/* Pantalla de entrada */
+#lock{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px 40px;text-align:center}
+#lock img{width:132px;height:132px}
+#lock h1{font-family:var(--serif);font-weight:400;font-size:34px;margin:18px 0 2px;color:var(--navy)}
+#lock .sub{color:var(--muted);margin:0 0 22px;font-size:15px}
+.pinIn{width:100%;max-width:300px;padding:15px;border:1px solid var(--line);border-radius:16px;text-align:center;font-size:26px;letter-spacing:10px;background:#fff;outline:none}
+.pinIn:focus{border-color:var(--navy)}
+.pinIn+.pinIn{margin-top:10px}
+.btn{display:block;width:100%;max-width:300px;margin:14px auto 0;padding:15px;border-radius:16px;font-weight:700;font-size:17px;background:var(--navy);color:#fff}
+.btn.sec{background:#fff;color:var(--navy);border:1px solid var(--line)}
+.btn.grn{background:var(--green)}
+#lErr{color:var(--rose);font-weight:600;min-height:22px;margin-top:12px;font-size:14px}
+.lnk{color:var(--navy2);font-size:14px;margin-top:14px;text-decoration:underline;text-underline-offset:3px}
+.small{color:var(--muted);font-size:12px;margin-top:22px}
+
+/* App */
+#app{max-width:560px;margin:0 auto;padding:10px 16px 120px}
+.top{display:flex;align-items:center;gap:12px;padding:6px 0 10px}
+.top img{width:48px;height:48px}
+.top .t{flex:1}
+.top .t b{display:block;font-family:var(--serif);font-weight:400;font-size:26px;color:var(--navy);line-height:1.05}
+.top .t span{color:var(--muted);font-size:13px}
+.ico{width:42px;height:42px;border-radius:14px;background:#fff;border:1px solid var(--line);font-size:18px;display:flex;align-items:center;justify-content:center}
+.mbar{display:flex;align-items:center;justify-content:space-between;margin:6px 0 12px}
+.mbar h2{font-family:var(--serif);font-weight:400;font-size:24px;margin:0;color:var(--navy)}
+.arr{width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid var(--line);font-size:22px;line-height:1;color:var(--navy)}
+.hero{background:var(--navy);color:#fff;border-radius:24px;padding:20px 20px 18px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-60px;top:-60px;width:180px;height:180px;border:1.5px solid rgba(255,255,255,.14);border-radius:50%}
+.hero .l{font-size:12px;letter-spacing:1.6px;opacity:.75;text-transform:uppercase}
+.hero .a{font-family:var(--serif);font-size:44px;line-height:1.1;margin:6px 0 14px;font-variant-numeric:tabular-nums}
+.hero .row{display:flex;gap:10px}
+.hero .k{flex:1;background:rgba(255,255,255,.09);border-radius:14px;padding:10px 12px}
+.hero .k span{display:block;font-size:12px;opacity:.75}
+.hero .k b{font-size:18px;font-variant-numeric:tabular-nums}
+.bud{margin-top:14px;font-size:13px;opacity:.95}
+.bar{height:8px;background:rgba(255,255,255,.18);border-radius:8px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:#fff;border-radius:8px}
+.bar.over i{background:#F2A9B8}
+.hb{display:flex;gap:10px;margin:12px 0 4px}
+.hb button{flex:1;padding:14px;border-radius:16px;font-weight:700;font-size:16px}
+.bOut{background:var(--navy);color:#fff}
+.bIn{background:var(--green);color:#fff}
+.sh{display:flex;align-items:baseline;justify-content:space-between;margin:24px 2px 10px}
+.sh h3{font-family:var(--serif);font-weight:400;font-size:21px;margin:0;color:var(--navy)}
+.sh small{color:var(--muted);font-size:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px 16px}
+.opo{display:flex;gap:10px}
+.opo .k{flex:1;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px}
+.opo .k span{display:block;color:var(--muted);font-size:12px}
+.opo .k b{font-size:20px;color:var(--navy);font-variant-numeric:tabular-nums}
+.opo .k small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.cb{display:flex;align-items:center;gap:10px;padding:7px 0}
+.cb .e{width:30px;text-align:center;font-size:19px}
+.cb .m{flex:1;min-width:0}
+.cb .n{display:flex;justify-content:space-between;font-size:14px}
+.cb .n b{font-variant-numeric:tabular-nums}
+.cb .tr{height:7px;background:#F1E7DD;border-radius:7px;margin-top:5px;overflow:hidden}
+.cb .tr i{display:block;height:100%;background:var(--navy);border-radius:7px}
+.lgd{display:flex;gap:14px;font-size:12px;color:#4A5466;margin:0 0 6px}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+#ch svg{display:block;width:100%;height:auto;overflow:visible}
+#ch .g{cursor:pointer}
+#chI{display:flex;justify-content:space-between;gap:8px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-top:8px;font-size:13px}
+#chI b{display:block;font-size:15px;font-variant-numeric:tabular-nums;color:var(--ink)}
+#chI span{color:var(--muted);font-size:11px}
+#chM{color:#4A5466;font-size:13px;margin-top:10px;line-height:1.4}
+.apps{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.apps button{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 10px;font-size:14px;font-weight:600;text-align:left}
+.apps button i{font-style:normal;font-size:18px}
+.apps button small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.apps button.on{border-color:var(--green);box-shadow:0 0 0 1.5px var(--green) inset;background:var(--green2)}
+.empty{color:var(--muted);text-align:center;padding:14px 4px;font-size:14px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin:0 -2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:8px 13px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:13px;white-space:nowrap}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.day{color:var(--muted);font-size:12px;letter-spacing:.8px;text-transform:uppercase;margin:14px 4px 6px}
+.mv{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:16px;padding:11px 13px;margin-bottom:7px}
+.mv .e{width:38px;height:38px;border-radius:12px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:19px;flex:none}
+.mv .m{flex:1;min-width:0}
+.mv .m b{display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mv .m span{color:var(--muted);font-size:12px}
+.mv .a{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mv .a.in{color:var(--green)}
+.tag{display:inline-block;font-size:10px;letter-spacing:.6px;text-transform:uppercase;background:var(--green2);color:var(--green);border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:1px}
+.acc{width:100%;display:flex;justify-content:space-between;align-items:baseline;text-align:left}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tools button{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 8px;font-size:13px;font-weight:600;color:var(--navy)}
+.cfg{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:10px;flex-wrap:wrap}
+.cfg input{width:110px;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.foot{color:var(--muted);font-size:12px;text-align:center;margin-top:18px}
+
+/* Barra rápida (sin micrófono) */
+#qb{position:fixed;left:0;right:0;bottom:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(rgba(254,244,235,0),var(--cream) 30%);z-index:5}
+#qb form{max-width:560px;margin:0 auto;display:flex;gap:8px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 5px 5px 18px;box-shadow:0 6px 24px rgba(22,55,99,.12)}
+#qb input{flex:1;min-width:0;border:0;outline:none;font-size:16px;background:none}
+#qb button{width:44px;height:44px;border-radius:50%;background:var(--navy);color:#fff;font-size:20px;flex:none}
+
+/* Hojas y avisos */
+.ov{position:fixed;inset:0;background:rgba(18,30,52,.42);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.ov.c{align-items:center;padding:20px}
+.sheet{background:var(--cream);width:100%;max-width:560px;border-radius:26px 26px 0 0;padding:16px 18px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto;animation:up .22s ease-out}
+.dlg{background:var(--cream);width:100%;max-width:380px;border-radius:24px;padding:20px;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
+.sh2{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.sh2 h3{font-family:var(--serif);font-weight:400;font-size:24px;margin:0;color:var(--navy)}
+.x{width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid var(--line);font-size:20px}
+.seg{display:flex;background:#fff;border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:12px}
+.seg button{flex:1;padding:9px;border-radius:10px;font-weight:600;font-size:14px;color:var(--muted)}
+.seg button.on{background:var(--navy);color:#fff}
+.seg.in button.on{background:var(--green)}
+.amt{display:flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:6px 16px;margin-bottom:12px}
+.amt input{flex:1;border:0;outline:none;font-family:var(--serif);font-size:40px;padding:6px 0;background:none;min-width:0}
+.amt span{font-family:var(--serif);font-size:30px;color:var(--muted)}
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px}
+.cats button{background:#fff;border:1px solid var(--line);border-radius:14px;padding:9px 4px;font-size:11px;line-height:1.2;display:flex;flex-direction:column;align-items:center;gap:3px}
+.cats button i{font-style:normal;font-size:21px}
+.cats button.on{border-color:var(--navy);box-shadow:0 0 0 1.5px var(--navy) inset;background:#F3F5F9}
+.fld{display:block;margin-bottom:10px}
+.fld span{display:block;font-size:12px;color:var(--muted);margin:0 0 4px 4px}
+.fld input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;font-size:16px;outline:none;-webkit-appearance:none;appearance:none;min-height:46px}
+.chk{display:flex;gap:10px;align-items:center;font-size:14px;margin:4px 2px 6px}
+.chk input{width:20px;height:20px;accent-color:var(--navy)}
+.del{color:var(--rose);font-weight:600;margin:12px auto 0;display:block}
+.dlg p{color:#4A5466;font-size:15px;line-height:1.45;margin:6px 0 12px}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:19px;letter-spacing:1px;background:#fff;border:1px dashed var(--navy);border-radius:14px;padding:14px;text-align:center;word-break:break-word;user-select:all;-webkit-user-select:all}
+#ans{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(74px + env(safe-area-inset-bottom));width:calc(100% - 28px);max-width:532px;background:#fff;border:1px solid var(--line);border-radius:18px 18px 18px 6px;padding:12px 40px 12px 14px;font-size:14px;line-height:1.45;z-index:6;box-shadow:0 8px 28px rgba(22,55,99,.14);max-height:50vh;overflow:auto}
+#ans .q{color:var(--muted);font-size:12px;margin-bottom:4px}
+#ans .cl{position:absolute;right:8px;top:8px;width:28px;height:28px;border-radius:50%;background:var(--cream);font-size:16px}
+#ans ul{margin:4px 0 0;padding-left:18px}
+#toast{position:fixed;left:50%;width:max-content;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 14px 11px 16px;border-radius:14px;font-size:14px;z-index:30;display:flex;gap:12px;align-items:center;max-width:92vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+#toast button{color:#F2C6CF;font-weight:700}
+</style></head><body>
+
+<div id="lock">
+ <img src="logo.png" alt="">
+ <h1 id="lT">Hola</h1>
+ <p class="sub" id="lS">Entra con tu PIN</p>
+ <button class="btn sec hide" id="bioBtn">Entrar con Face ID</button>
+ <div id="pinBox" style="width:100%;display:flex;flex-direction:column;align-items:center">
+  <input class="pinIn" id="pin1" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="PIN" autocomplete="off">
+  <input class="pinIn hide" id="pin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="Repite el PIN" autocomplete="off">
+  <button class="btn" id="pinBtn">Entrar</button>
+ </div>
+ <div id="lErr"></div>
+ <button class="lnk hide" id="recBtn">¿Has olvidado el PIN?</button>
+ <div class="small">App privada · tus datos solo están en este móvil, cifrados</div>
+</div>
+
+<div id="app" class="hide">
+ <div class="top"><img src="logo.png" alt=""><div class="t"><b>Mis gastos</b><span id="greet"></span></div><button class="ico" id="lockBtn" aria-label="Bloquear">🔒</button></div>
+ <div class="mbar"><button class="arr" id="prevM" aria-label="Mes anterior">‹</button><h2 id="mT"></h2><button class="arr" id="nextM" aria-label="Mes siguiente">›</button></div>
+ <div class="hero">
+  <div class="l">Te queda este mes</div>
+  <div class="a" id="hBal"></div>
+  <div class="row"><div class="k"><span>Ingresos</span><b id="hIn"></b></div><div class="k"><span>Gastos</span><b id="hOut"></b></div></div>
+  <div class="bud hide" id="hBud"></div>
+ </div>
+ <div class="hb"><button class="bOut" id="addOut">＋ Gasto</button><button class="bIn" id="addIn">＋ Ingreso</button></div>
+
+ <div class="sh" id="opoH"><h3>Oposición y máster</h3><small id="opoY"></small></div>
+ <div class="opo" id="opo"></div>
+
+ <div class="sh"><h3>¿En qué se va?</h3><small>Este mes</small></div>
+ <div class="card" id="cats"></div>
+
+ <div class="sh"><h3>Últimos 6 meses</h3><small>Toca un mes</small></div>
+ <div class="card"><div class="lgd"><span><i style="background:#2D5DA6"></i>Gastos</span><span><i style="background:#5A9440"></i>Ingresos</span></div>
+  <div id="ch"></div><div id="chI"></div><div id="chM"></div></div>
+
+ <div class="sh"><h3>Movimientos</h3><small id="mvN"></small></div>
+ <div class="chips" id="chips"></div>
+ <div id="list"></div>
+
+ <div class="sh"><button class="acc" id="fijTog"><h3><span id="fijA">▸</span> Gastos fijos</h3><small id="fijS">Academia, suscripciones… cada mes</small></button></div>
+ <div id="fijB" class="hide"><button class="btn grn" id="appsBtn" style="max-width:none;margin:0 0 10px">📱 Elegir mis apps (Spotify, Netflix…)</button><div id="fijL"></div><button class="btn sec" id="addFij" style="max-width:none;margin-top:4px">＋ Añadir gasto fijo mensual</button></div>
+
+ <div class="sh"><button class="acc" id="cfgTog"><h3><span id="cfgA">▸</span> Ajustes y copias</h3><small id="bakS"></small></button></div>
+ <div id="cfgB" class="hide">
+  <div class="cfg">Quiero gastar como mucho <input id="cPres" inputmode="decimal" placeholder="0"> € al mes</div>
+  <div class="tools">
+   <button id="catMng" style="grid-column:1/-1">🏷️ Mis categorías (crear, cambiar, borrar)</button>
+   <button id="bak">⬇ Copia de seguridad</button><button id="rest">⬆ Restaurar copia</button>
+   <button id="csv">📊 Exportar mes (Excel)</button><button id="bioSet">🙂 Activar Face ID</button>
+   <button id="pinChg">🔑 Cambiar PIN</button><button id="recNew">🧾 Nuevo código de recuperación</button>
+  </div>
+  <input type="file" id="restF" accept=".json,application/json" class="hide">
+ </div>
+ <div class="foot">Datos cifrados solo en este móvil · Haz copia de vez en cuando</div>
+</div>
+
+<div id="qb" class="hide"><form id="qf" autocomplete="off"><input id="qi" placeholder="Apunta o pide algo: «25 uñas», «ayuda»…" enterkeyhint="send"><button type="submit" aria-label="Apuntar">↑</button></form></div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const S=crypto.subtle,te=new TextEncoder(),td=new TextDecoder();
+const b64=u=>{u=new Uint8Array(u);let s="";for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(s)};
+const ub64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0)),rnd=n=>crypto.getRandomValues(new Uint8Array(n));
+const cat2=(a,b)=>{const o=new Uint8Array(a.length+b.length);o.set(a);o.set(b,a.length);return o};
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let ls=null;try{ls=window.localStorage}catch(e){}
+const MKEY="afm-vault-v1",DKEY="afm-data-v1",ITER=600000,LOCKMIN=5;
+
+/* ---------- Cifrado (todo en el móvil, nada sale) ---------- */
+let meta=null;try{meta=JSON.parse(ls.getItem(MKEY)||"null")}catch(e){}
+const saveMeta=()=>{try{ls.setItem(MKEY,JSON.stringify(meta))}catch(e){}};
+let dek=null,dekRaw=null;
+const pbkdf=async(secret,salt,iter)=>new Uint8Array(await S.deriveBits({name:"PBKDF2",hash:"SHA-256",salt,iterations:iter},await S.importKey("raw",te.encode(secret),"PBKDF2",false,["deriveBits"]),256));
+const aes=raw=>S.importKey("raw",raw,"AES-GCM",false,["encrypt","decrypt"]);
+const hkdf=async(raw,info)=>S.deriveKey({name:"HKDF",hash:"SHA-256",salt:new Uint8Array(32),info:te.encode(info)},await S.importKey("raw",raw,"HKDF",false,["deriveKey"]),{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+const seal=async(key,bytes)=>{const iv=rnd(12);return cat2(iv,new Uint8Array(await S.encrypt({name:"AES-GCM",iv},key,bytes)))};
+const unseal=async(key,buf)=>new Uint8Array(await S.decrypt({name:"AES-GCM",iv:buf.slice(0,12)},key,buf.slice(12)));
+const pinKey=async(pin,salt,iter)=>aes(await pbkdf("afm-pin:"+pin,ub64(salt),iter));
+const ALPH="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const genCode=()=>Array.from(rnd(20),x=>ALPH[x&31]).join("").match(/.{4}/g).join("-");
+const recKey=async code=>aes(await pbkdf("afm-rec:"+code.toUpperCase().replace(/[^A-Z0-9]/g,""),te.encode("afm-recovery"),200000));
+async function encStr(str,key){return "e1:"+b64(await seal(key,te.encode(str)))}
+async function decStr(s,key){if(typeof s!=="string"||!s.startsWith("e1:"))throw new Error("formato");return td.decode(await unseal(key,ub64(s.slice(3))))}
+
+// Llave del dispositivo: no se puede sacar del móvil, así copiar los datos a otro sitio no basta para probar PINs.
+const idb=fn=>new Promise((ok,ko)=>{const r=indexedDB.open("afm-vault",1);r.onupgradeneeded=()=>r.result.createObjectStore("k");r.onerror=()=>ko(r.error);
+ r.onsuccess=()=>{const db=r.result,t=db.transaction("k","readwrite"),q=fn(t.objectStore("k"));t.oncomplete=()=>{db.close();ok(q.result)};t.onerror=()=>ko(t.error)}});
+async function deviceKey(create){try{let k=await idb(s=>s.get("dev"));if(!k&&create){k=await S.generateKey({name:"AES-GCM",length:256},false,["encrypt","decrypt"]);await idb(s=>s.put(k,"dev"))}return k||null}catch(e){return null}}
+async function wrapPin(pin){const salt=b64(rnd(16));let w=await seal(await pinKey(pin,salt,ITER),dekRaw);const d=await deviceKey(true);if(d)w=await seal(d,w);
+ meta=Object.assign(meta||{},{salt,iter:ITER,wl:b64(w),dv:d?1:0,fails:0,until:0});saveMeta()}
+
+/* ---------- Entrada ---------- */
+const lErr=t=>{$("lErr").textContent=t||""};
+function busy(on,txt){$("pinBtn").disabled=on;$("pinBtn").textContent=on?"Un momento…":(txt||($("pin2").classList.contains("hide")?"Entrar":"Crear PIN"))}
+function tooMany(){if(meta&&meta.until>Date.now()){const s=Math.ceil((meta.until-Date.now())/1e3);throw new Error(`Demasiados intentos. Espera ${s<120?s+" segundos":Math.ceil(s/60)+" minutos"}.`)}}
+async function unlockPin(pin){tooMany();
+ try{let w=ub64(meta.wl);if(meta.dv){const d=await deviceKey(false);if(!d)throw "nodev";w=await unseal(d,w)}
+  const raw=await unseal(await pinKey(pin,meta.salt,meta.iter),w);meta.fails=0;meta.until=0;saveMeta();return finish(raw)}
+ catch(e){if(e==="nodev")throw new Error("Este móvil ha perdido su llave. Usa «¿Has olvidado el PIN?» con tu código.");
+  meta.fails=(meta.fails||0)+1;if(meta.fails>=5)meta.until=Date.now()+Math.min(3600e3,30e3*2**(meta.fails-5));saveMeta();throw new Error("PIN incorrecto")}}
+async function createVault(pin){dekRaw=rnd(32);const code=genCode();meta={wr:b64(await seal(await recKey(code),dekRaw))};await wrapPin(pin);
+ await showCode(code,"¡PIN creado!");await finish(dekRaw);if(await bioAvail())offerBio()}
+function offerBio(){const o=overlay(`<div class="dlg"><div class="sh2"><h3>¿Entrar con Face ID?</h3></div><p>Así no tendrás que escribir el PIN cada vez. El PIN seguirá valiendo siempre.</p>
+  <button class="btn ok" style="max-width:none">Sí, activar Face ID</button><button class="btn sec no" style="max-width:none">Ahora no</button></div>`,true);
+ o.querySelector(".no").onclick=()=>o.remove();
+ o.querySelector(".ok").onclick=()=>{bioOn().then(()=>{o.remove();paintBio();toast("Face ID activado ✓")}).catch(e=>{o.remove();say("No se ha podido",`<p>${e==="noprf"?"Tu iPhone necesita estar actualizado (iOS 18 o más nuevo). Puedes activarlo más tarde en Ajustes.":"Se ha cancelado. Puedes activarlo más tarde en Ajustes."}</p>`)})}}
+async function finish(raw){dekRaw=raw;dek=await aes(raw);await loadData();$("lock").classList.add("hide");$("app").classList.remove("hide");$("qb").classList.remove("hide");start()}
+
+$("pinBtn").onclick=async()=>{const p1=$("pin1").value.trim(),creating=!meta||!meta.wl;lErr("");
+ if(!/^\d{4,8}$/.test(p1)){lErr("El PIN son de 4 a 8 números");return}
+ if(creating){if($("pin2").classList.contains("hide")){$("pin2").classList.remove("hide");$("pin2").focus();busy(false,"Crear PIN");return}
+  if($("pin2").value.trim()!==p1){lErr("Los dos PIN no coinciden");$("pin2").value="";return}}
+ busy(true);try{creating?await createVault(p1):await unlockPin(p1)}catch(e){lErr(e.message||"No se ha podido entrar");$("pin1").value="";busy(false)}};
+["pin1","pin2"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter")$("pinBtn").click()}));
+$("recBtn").onclick=async()=>{lErr("");
+ const v=await ask("Recuperar acceso","Escribe el código de recuperación que apuntaste al crear el PIN.",[["Código (XXXX-XXXX-…)","code"]],"Seguir");if(!v)return;
+ let raw;try{raw=await unseal(await recKey(v[0]),ub64(meta.wr))}catch(e){lErr("Código incorrecto");return}
+ const p=await ask("Nuevo PIN","Elige un PIN nuevo de 4 a 8 números.",[["Nuevo PIN","pin"],["Repite el PIN","pin"]],"Guardar");
+ if(!p)return;if(!/^\d{4,8}$/.test(p[0])||p[0]!==p[1]){lErr("Los PIN no son válidos o no coinciden");return}
+ dekRaw=raw;await wrapPin(p[0]);await finish(raw)};
+
+/* Face ID / huella con WebAuthn PRF: la cara desbloquea la llave, sin guardar el PIN */
+const bioAvail=()=>window.PublicKeyCredential&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(()=>false):Promise.resolve(false);
+async function prf(id,salt){const a=await navigator.credentials.get({publicKey:{challenge:rnd(32),allowCredentials:[{type:"public-key",id}],userVerification:"required",timeout:60000,extensions:{prf:{eval:{first:salt}}}}});
+ const x=a.getClientExtensionResults().prf;return x&&x.results&&x.results.first?new Uint8Array(x.results.first):null}
+async function bioOn(){const salt=rnd(32);
+ const c=await navigator.credentials.create({publicKey:{challenge:rnd(32),rp:{name:"Mis gastos"},user:{id:rnd(16),name:"mis-gastos",displayName:"Mis gastos"},
+  pubKeyCredParams:[{type:"public-key",alg:-7},{type:"public-key",alg:-257}],authenticatorSelection:{authenticatorAttachment:"platform",userVerification:"required",residentKey:"preferred"},timeout:60000,attestation:"none",extensions:{prf:{eval:{first:salt}}}}});
+ const x=c.getClientExtensionResults().prf||{},id=new Uint8Array(c.rawId);if(x.enabled===false)throw "noprf";
+ const out=x.results&&x.results.first?new Uint8Array(x.results.first):await prf(id,salt);if(!out)throw "noprf";
+ meta.bio={id:b64(id),s:b64(salt),w:b64(await seal(await hkdf(out,"afm-bio"),dekRaw))};saveMeta()}
+$("bioBtn").onclick=async()=>{lErr("");try{const b=meta.bio,out=await prf(ub64(b.id),ub64(b.s));if(!out)throw 0;await finish(await unseal(await hkdf(out,"afm-bio"),ub64(b.w)))}
+ catch(e){lErr("No se ha podido con Face ID. Entra con el PIN.")}};
+
+(function initLock(){
+ if(!meta||!meta.wl){$("lT").textContent="Bienvenida";$("lS").textContent="Crea un PIN de 4 a 8 números. Lo pedirá siempre al entrar.";busy(false,"Seguir")}
+ else{$("recBtn").classList.toggle("hide",!meta.wr);if(meta.bio)$("bioBtn").classList.remove("hide");const h=new Date().getHours();$("lT").textContent=h<14?"Buenos días":h<21?"Buenas tardes":"Buenas noches"}
+ if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+})();
+
+/* ---------- Diálogos ---------- */
+function overlay(html,center){const o=document.createElement("div");o.className="ov"+(center?" c":"");o.innerHTML=html;document.body.appendChild(o);return o}
+function ask(title,text,fields,okText){return new Promise(res=>{
+ const o=overlay(`<div class="dlg"><div class="sh2"><h3>${esc(title)}</h3><button class="x">×</button></div>${text?`<p>${esc(text)}</p>`:""}
+  ${fields.map(([l,t],i)=>`<label class="fld"><span>${esc(l)}</span><input data-i="${i}" ${t==="pin"?'type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8"':t==="money"?'type="text" inputmode="decimal" placeholder="0,00 €"':t==="code"?'type="text" autocapitalize="characters"':'type="text" autocapitalize="sentences" maxlength="30"'} value="${esc(fields[i][2]||"")}" autocomplete="off"></label>`).join("")}
+  <button class="btn ok" style="max-width:none">${esc(okText||"Aceptar")}</button></div>`,true);
+ const done=v=>{o.remove();res(v)};o.querySelector(".x").onclick=()=>done(null);o.onclick=e=>{if(e.target===o)done(null)};
+ o.querySelector(".ok").onclick=()=>done([...o.querySelectorAll("input")].map(i=>i.value.trim()));
+ const f=o.querySelector("input");if(f)setTimeout(()=>f.focus(),60)})}
+function say(title,html,okText){return new Promise(res=>{const o=overlay(`<div class="dlg"><div class="sh2"><h3>${esc(title)}</h3></div>${html}<button class="btn ok" style="max-width:none">${esc(okText||"Entendido")}</button></div>`,true);
+ o.querySelector(".ok").onclick=()=>{o.remove();res(true)}})}
+function confirmD(title,text,okText){return new Promise(res=>{const o=overlay(`<div class="dlg"><div class="sh2"><h3>${esc(title)}</h3></div><p>${esc(text)}</p><button class="btn ok" style="max-width:none">${esc(okText||"Sí")}</button><button class="btn sec no" style="max-width:none">Cancelar</button></div>`,true);
+ o.querySelector(".ok").onclick=()=>{o.remove();res(true)};o.querySelector(".no").onclick=()=>{o.remove();res(false)}})}
+const showCode=(code,title)=>say(title,`<p>Este es tu <b>código de recuperación</b>. Si algún día olvidas el PIN, solo con él podrás entrar. <b>Hazle una foto o apúntalo</b> en un sitio seguro: no se volverá a mostrar.</p><div class="code">${code}</div>`,"Ya lo he guardado");
+let tT=null;function toast(msg,undo){let t=$("toast");if(t)t.remove();t=document.createElement("div");t.id="toast";t.innerHTML=`<span>${esc(msg)}</span>${undo?'<button>Deshacer</button>':""}`;document.body.appendChild(t);
+ if(undo)t.querySelector("button").onclick=()=>{t.remove();undo()};clearTimeout(tT);tT=setTimeout(()=>t.remove(),undo?5000:2600)}
+
+/* ---------- Datos ---------- */
+const DEF_CATS={
+ ropa:["👗","Ropa"],unas:["💅","Uñas y belleza"],libros:["📚","Libros"],opos:["📝","Oposición"],master:["🎓","Máster"],
+ comida:["🍽️","Comida y salir"],super:["🛒","Súper"],compras:["🛍️","Compras y regalos"],trans:["🚗","Transporte"],casa:["🏠","Casa"],subs:["📱","Suscripciones"],
+ salud:["💊","Salud y deporte"],viajes:["✈️","Viajes"],otros:["✨","Otros"]};
+const DEF_ICATS={nomina:["💼","Nómina"],clases:["👩‍🏫","Clases particulares"],otrosi:["💶","Otros ingresos"]};
+const FALL={out:"otros",in:"otrosi"};
+const catsOf=t=>t==="in"?D.icats:D.cats;
+const catOf=(t,c)=>{const L=catsOf(t==="in"?"in":"out")||{};return L[c]||L[FALL[t==="in"?"in":"out"]]||["✨","Otros"]};
+let D={v:1,mov:[],fij:[],cfg:{pres:0},lastBak:0,cats:null,icats:null};
+async function loadData(){const v=ls.getItem(DKEY);if(v){try{D=Object.assign(D,JSON.parse(await decStr(v,dek)))}catch(e){alert("No se han podido leer los datos guardados.")}}
+ if(!D.cats)D.cats=JSON.parse(JSON.stringify(DEF_CATS));if(!D.icats)D.icats=JSON.parse(JSON.stringify(DEF_ICATS))}
+let saving=null;function save(){if(saving)return;saving=setTimeout(async()=>{saving=null;try{ls.setItem(DKEY,await encStr(JSON.stringify(D),dek))}catch(e){alert("No he podido guardar. Haz una copia de seguridad.")}},50)}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad=n=>String(n).padStart(2,"0");
+const dk=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const mkOf=s=>s.slice(0,7);
+const fmt=new Intl.NumberFormat("es-ES",{style:"currency",currency:"EUR"});
+const money=n=>fmt.format(Math.round(n*100)/100);
+const num=s=>{s=String(s||"").replace(/\s|€/g,"");if(/,\d{1,2}$/.test(s))s=s.replace(/\./g,"").replace(",",".");else s=s.replace(/,/g,"");const n=parseFloat(s);return isFinite(n)?Math.round(n*100)/100:NaN};
+let cur=new Date();cur.setDate(1);let filt="all";
+const curMk=()=>`${cur.getFullYear()}-${pad(cur.getMonth()+1)}`;
+const fijActive=(f,mk)=>f.from<=mk&&(!f.to||f.to>=mk);
+function monthItems(mk){const it=D.mov.filter(m=>mkOf(m.d)===mk);
+ D.fij.forEach(f=>{if(fijActive(f,mk))it.push({id:"f:"+f.id,fij:f.id,t:f.t||"out",a:f.a,c:f.c,n:f.n,d:mk+"-01"})});
+ return it.sort((a,b)=>b.d.localeCompare(a.d)||(b.ts||0)-(a.ts||0))}
+const sum=(arr,t)=>arr.filter(m=>m.t===t).reduce((s,m)=>s+m.a,0);
+function yearCat(y,c){let s=D.mov.filter(m=>m.t==="out"&&m.c===c&&m.d.startsWith(y)).reduce((s,m)=>s+m.a,0);
+ for(let i=1;i<=12;i++){const mk=`${y}-${pad(i)}`;D.fij.forEach(f=>{if(f.c===c&&(f.t||"out")==="out"&&fijActive(f,mk))s+=f.a})}return s}
+function allCat(c){const ys=new Set(D.mov.map(m=>m.d.slice(0,4)));D.fij.forEach(f=>ys.add(f.from.slice(0,4)));ys.add(String(new Date().getFullYear()));let s=0;
+ const nowMk=dk(new Date()).slice(0,7);ys.forEach(y=>{s+=D.mov.filter(m=>m.t==="out"&&m.c===c&&m.d.startsWith(y)).reduce((a,m)=>a+m.a,0);
+  for(let i=1;i<=12;i++){const mk=`${y}-${pad(i)}`;if(mk>nowMk)break;D.fij.forEach(f=>{if(f.c===c&&(f.t||"out")==="out"&&fijActive(f,mk))s+=f.a})}});return s}
+
+/* ---------- Pintar ---------- */
+function render(){const mk=curMk(),it=monthItems(mk),inc=sum(it,"in"),out=sum(it,"out"),bal=inc-out;
+ {const t=cur.toLocaleDateString("es-ES",{month:"long",year:"numeric"});$("mT").textContent=t.charAt(0).toUpperCase()+t.slice(1)}
+ $("hBal").textContent=money(bal);$("hIn").textContent=money(inc);$("hOut").textContent=money(out);
+ const p=D.cfg.pres||0;$("hBud").classList.toggle("hide",!p);
+ if(p){const r=out/p;$("hBud").innerHTML=`${r>1?"Te has pasado "+money(out-p)+" del límite":"Llevas "+money(out)+" de "+money(p)+" · quedan "+money(p-out)}<div class="bar${r>1?" over":""}"><i style="width:${Math.min(100,r*100)}%"></i></div>`}
+ // Oposición y máster
+ const y=String(cur.getFullYear());$("opoY").textContent="Año "+y;
+ const oc=["opos","master","libros"].filter(c=>D.cats[c]);$("opoH").classList.toggle("hide",!oc.length);$("opo").classList.toggle("hide",!oc.length);
+ $("opo").innerHTML=oc.map(c=>`<div class="k"><span>${D.cats[c][0]} ${esc(D.cats[c][1])}</span><b>${money(yearCat(y,c))}</b><small>Total: ${money(allCat(c))}</small></div>`).join("");
+ // Categorías
+ const by={};it.filter(m=>m.t==="out").forEach(m=>by[m.c]=(by[m.c]||0)+m.a);const ks=Object.keys(by).sort((a,b)=>by[b]-by[a]),mx=by[ks[0]]||1;
+ $("cats").innerHTML=ks.length?ks.map(c=>{const[e,n]=catOf("out",c);return`<div class="cb"><div class="e">${esc(e)}</div><div class="m"><div class="n"><span>${esc(n)}</span><b>${money(by[c])}</b></div><div class="tr"><i style="width:${by[c]/mx*100}%"></i></div></div></div>`}).join(""):'<div class="empty">Aún no hay gastos este mes</div>';
+ // Filtros
+ const used=[...new Set(it.map(m=>m.t+":"+m.c))];
+ if(filt!=="all"&&!used.includes(filt))filt="all";
+ $("chips").innerHTML=`<button class="chip${filt==="all"?" on":""}" data-f="all">Todo</button>`+used.map(k=>{const[t,c]=k.split(":"),[e,n]=catOf(t,c);return`<button class="chip${filt===k?" on":""}" data-f="${k}">${esc(e)} ${esc(n)}</button>`}).join("");
+ const shown=filt==="all"?it:it.filter(m=>m.t+":"+m.c===filt);
+ $("mvN").textContent=shown.length?shown.length+(shown.length===1?" movimiento":" movimientos"):"";
+ let last="",h="";shown.forEach(m=>{const day=m.fij?"Fijos del mes":new Date(m.d+"T12:00").toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"});
+  if(day!==last){h+=`<div class="day">${day}</div>`;last=day}const[e,n]=catOf(m.t,m.c);
+  h+=`<button class="mv" data-id="${esc(m.id)}"><div class="e">${esc(e)}</div><div class="m"><b>${esc(m.n||n)}</b><span>${esc(n)}${m.fij?'<span class="tag">fijo</span>':""}</span></div><div class="a${m.t==="in"?" in":""}">${m.t==="in"?"+":"−"}${money(m.a)}</div></button>`});
+ $("list").innerHTML=h||'<div class="empty">Nada apuntado este mes.<br>Pulsa «＋ Gasto» o escribe abajo, por ejemplo «25 uñas».</div>';
+ // Fijos
+ const nowMk=dk(new Date()).slice(0,7),act=D.fij.filter(f=>!f.to||f.to>=nowMk);
+ $("fijS").textContent=act.length?act.length+" · "+money(act.filter(f=>(f.t||"out")==="out").reduce((s,f)=>s+f.a,0))+"/mes":"Academia, suscripciones… cada mes";
+ $("fijL").innerHTML=act.map(f=>{const[e,n]=catOf(f.t||"out",f.c);return`<button class="mv" data-fij="${esc(f.id)}"><div class="e">${esc(e)}</div><div class="m"><b>${esc(f.n||n)}</b><span>${esc(n)} · cada mes</span></div><div class="a${f.t==="in"?" in":""}">${money(f.a)}</div></button>`}).join("")||'<div class="empty">Sin gastos fijos</div>';
+ chart();
+ // Copias
+ const days=D.lastBak?Math.floor((Date.now()-D.lastBak)/864e5):null;
+ $("bakS").textContent=days===null?"Sin copia todavía":days===0?"Copia hecha hoy":`Última copia hace ${days} día${days===1?"":"s"}`;
+ $("cPres").value=D.cfg.pres||"";
+}
+
+/* ---------- Gráfica: gastos e ingresos de los últimos 6 meses ---------- */
+let chSel=null;
+function chart(){const C_OUT="#2D5DA6",C_IN="#5A9440",ms=[];
+ for(let i=5;i>=0;i--){const d=new Date(cur.getFullYear(),cur.getMonth()-i,1),mk=`${d.getFullYear()}-${pad(d.getMonth()+1)}`,it=monthItems(mk);
+  ms.push({mk,d,out:sum(it,"out"),inc:sum(it,"in")})}
+ if(!chSel||!ms.some(m=>m.mk===chSel))chSel=ms[5].mk;
+ const W=340,H=170,L=40,R=4,T=8,B=24,pw=W-L-R,ph=H-T-B,mx=Math.max(1,...ms.map(m=>Math.max(m.out,m.inc)));
+ const step=[10,20,25,50,100,150,200,250,300,400,500,600,750,1000,1500,2000,2500,5000].find(x=>x*3>=mx)||Math.ceil(mx/3/1000)*1000,top=step*3,yv=v=>T+ph-v/top*ph;
+ const gw=pw/6,bw=Math.min(16,(gw-14)/2),k=n=>n>=1000?(n/1000).toLocaleString("es-ES",{maximumFractionDigits:1})+"k":String(n);
+ const bar=(x,v,c)=>{if(v<=0)return"";const y=yv(v),h=T+ph-y,r=Math.min(4,h);return`<path d="M${x},${T+ph}V${y+r}Q${x},${y} ${x+r},${y}H${x+bw-r}Q${x+bw},${y} ${x+bw},${y+r}V${T+ph}Z" fill="${c}"/>`};
+ let g="";for(let i=0;i<=3;i++){const y=yv(step*i);g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="${i?"#EFE5DA":"#D9CBBE"}" stroke-width="1"/><text x="${L-6}" y="${y+4}" text-anchor="end" font-size="10" fill="#80838E">${k(step*i)}</text>`}
+ ms.forEach((m,i)=>{const cx=L+gw*i+gw/2,sel=m.mk===chSel,x1=cx-bw-1,x2=cx+1;
+  g+=`<g class="g" data-mk="${m.mk}" opacity="${sel?1:.55}"><rect x="${L+gw*i}" y="${T}" width="${gw}" height="${ph+B}" fill="${sel?"#F4ECE3":"transparent"}" rx="8"/>${bar(x1,m.out,C_OUT)}${bar(x2,m.inc,C_IN)}
+   <text x="${cx}" y="${H-6}" text-anchor="middle" font-size="11" fill="${sel?"#1A2A44":"#80838E"}" font-weight="${sel?700:400}">${m.d.toLocaleDateString("es-ES",{month:"short"}).replace(".","")}</text></g>`});
+ $("ch").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gastos e ingresos de los últimos 6 meses">${g}</svg>`;
+ const s=ms.find(m=>m.mk===chSel),dif=s.inc-s.out,nm=s.d.toLocaleDateString("es-ES",{month:"long"});
+ $("chI").innerHTML=`<div><span>${nm.charAt(0).toUpperCase()+nm.slice(1)} · gastos</span><b>${money(s.out)}</b></div><div><span>Ingresos</span><b>${money(s.inc)}</b></div><div><span>${dif>=0?"Ahorrado":"Me faltó"}</span><b style="color:${dif>=0?"var(--green)":"var(--rose)"}">${money(Math.abs(dif))}</b></div>`;
+ const withData=ms.filter(m=>m.out>0),avg=withData.length?withData.reduce((a,m)=>a+m.out,0)/withData.length:0,last=ms[5];
+ let msg="";if(withData.length>=2&&last.out>0){const pc=Math.round((last.out-avg)/avg*100);msg=`De media gastas <b>${money(avg)}</b> al mes. `+(Math.abs(pc)<5?"Este mes vas en la línea de siempre.":pc>0?`Este mes llevas un <b>${pc}% más</b> que tu media.`:`Este mes llevas un <b>${-pc}% menos</b> que tu media. 👏`)}
+ else if(withData.length)msg=`Con un par de meses apuntados verás aquí tu media de gasto.`;
+ $("chM").innerHTML=msg;$("chM").classList.toggle("hide",!msg)}
+
+/* ---------- Añadir / editar ---------- */
+function sheet(m,opts={}){const isFij=!!opts.fij;let t=m?m.t||"out":opts.t||"out",c=m?m.c:(t==="in"?Object.keys(D.icats)[0]||"":"");
+ const o=overlay(`<div class="sheet"><div class="sh2"><h3>${isFij?(m?"Gasto fijo":"Nuevo gasto fijo"):(m?"Editar":"Apuntar")}</h3><button class="x">×</button></div>
+  <div class="seg${t==="in"?" in":""}"><button data-t="out" class="${t==="out"?"on":""}">Gasto</button><button data-t="in" class="${t==="in"?"on":""}">Ingreso</button></div>
+  <div class="amt"><input id="sA" inputmode="decimal" placeholder="0" value="${m?String(m.a).replace(".",","):""}"><span>€</span></div>
+  <div class="cats" id="sC"></div>
+  <label class="fld"><span>Nota (opcional)</span><input id="sN" type="text" placeholder="Ej.: vestido, temario inglés, academia…" value="${esc(m?m.n||"":"")}"></label>
+  ${isFij?"":`<label class="fld"><span>Fecha</span><input id="sD" type="date" value="${m?m.d:defDate()}"></label>`}
+  ${!isFij&&!m?'<label class="chk"><input type="checkbox" id="sF"> Se repite cada mes (gasto fijo)</label>':""}
+  <button class="btn" id="sOk" style="max-width:none">Guardar</button>${m?'<button class="del" id="sDel">Borrar</button>':""}</div>`);
+ const close=()=>o.remove();o.querySelector(".x").onclick=close;o.onclick=e=>{if(e.target===o)close()};
+ const paint=()=>{const L=catsOf(t);if(!L[c])c=t==="in"?Object.keys(L)[0]||"":"";o.querySelector(".seg").classList.toggle("in",t==="in");
+  o.querySelectorAll(".seg button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  o.querySelector("#sC").innerHTML=Object.entries(L).map(([k,[e,n]])=>`<button data-c="${k}" class="${k===c?"on":""}"><i>${esc(e)}</i>${esc(n)}</button>`).join("")+'<button data-new="1"><i>＋</i>Nueva</button>'};
+ paint();o.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{t=b.dataset.t;paint()});
+ o.querySelector("#sC").onclick=async e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.new){const k=await newCat(t);if(k){c=k;paint()}return}c=b.dataset.c;paint()};
+ if(!m)setTimeout(()=>o.querySelector("#sA").focus(),80);
+ o.querySelector("#sOk").onclick=()=>{const a=num(o.querySelector("#sA").value);if(!(a>0)){toast("Pon el importe");return}
+  if(!c){toast("Elige una categoría");return}const n=o.querySelector("#sN").value.trim();
+  const rep=o.querySelector("#sF")&&o.querySelector("#sF").checked;
+  if(isFij||rep){const d=o.querySelector("#sD");const from=d?mkOf(d.value||defDate()):(m?m.from:dk(new Date()).slice(0,7));
+   if(m)Object.assign(m,{t,a,c,n});else D.fij.push({id:uid(),t,a,c,n,from})}
+  else{const d=o.querySelector("#sD").value||defDate();if(m)Object.assign(m,{t,a,c,n,d});else D.mov.push({id:uid(),t,a,c,n,d,ts:Date.now()})}
+  save();close();render();toast(m?"Cambiado ✓":"Apuntado ✓")};
+ if(m)o.querySelector("#sDel").onclick=async()=>{if(isFij){if(!await confirmD("Quitar gasto fijo","Dejará de contarse desde este mes. Los meses pasados se quedan como estaban.","Quitar"))return;
+   const nowMk=dk(new Date()).slice(0,7);if(m.from>=nowMk)D.fij=D.fij.filter(f=>f!==m);else{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);m.to=dk(d).slice(0,7)}}
+  else{const i=D.mov.indexOf(m);D.mov.splice(i,1);save();close();render();toast("Borrado",()=>{D.mov.splice(i,0,m);save();render()});return}
+  save();close();render()}}
+const defDate=()=>{const n=new Date();return curMk()===dk(n).slice(0,7)?dk(n):curMk()+"-01"};
+
+/* ---------- Mis apps: marca las que tiene y quedan como gasto fijo mensual ---------- */
+const APPS=[["🎵","Spotify"],["🎬","Netflix"],["📺","HBO Max"],["🏰","Disney+"],["📦","Amazon Prime"],["▶️","YouTube Premium"],["🎧","Apple Music"],["☁️","iCloud+"],
+ ["💾","Google One"],["🤖","ChatGPT"],["✳️","Claude"],["📡","Movistar+"],["⚽","DAZN"],["🎞️","Filmin"],["📖","Kindle Unlimited"],["🦉","Duolingo"],["🎨","Canva"],["📝","Microsoft 365"],["📱","Tarifa del móvil"],["🏋️","Gimnasio"]];
+function subsCat(){if(D.cats.subs)return "subs";const ex=Object.entries(D.cats).find(([,x])=>norm(x[1]).startsWith("suscrip"));if(ex)return ex[0];D.cats.subs=["📱","Suscripciones"];return "subs"}
+const nowMk=()=>dk(new Date()).slice(0,7);
+const appFij=n=>D.fij.find(f=>f.app===n&&(!f.to||f.to>=nowMk()));
+function stopFij(f){if(f.from>=nowMk())D.fij=D.fij.filter(x=>x!==f);else{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);f.to=dk(d).slice(0,7)}}
+function appsSheet(){const o=overlay(`<div class="sheet"><div class="sh2"><h3>Mis apps</h3><button class="x">×</button></div>
+  <p class="small" style="margin:0 0 12px;text-align:left">Toca las que pagas. Se apuntan solas cada mes.</p><div class="apps" id="apL"></div>
+  <button class="btn sec" id="apOther" style="max-width:none">＋ Otra que no está</button><button class="btn" id="apOk" style="max-width:none">Listo</button></div>`);
+ const close=()=>{o.remove();render()};o.querySelector(".x").onclick=close;o.querySelector("#apOk").onclick=close;o.onclick=e=>{if(e.target===o)close()};
+ const extra=()=>D.fij.filter(f=>f.app&&(!f.to||f.to>=nowMk())&&!APPS.some(a=>a[1]===f.app)).map(f=>["📱",f.app]);
+ const paint=()=>{o.querySelector("#apL").innerHTML=APPS.concat(extra()).map(([e,n])=>{const f=appFij(n);return`<button data-n="${esc(n)}" class="${f?"on":""}"><i>${e}</i><span>${esc(n)}${f?`<small>${money(f.a)}/mes ✓</small>`:""}</span></button>`}).join("")};
+ const add=async(n)=>{const v=await ask(n,"¿Cuánto pagas al mes?",[["Precio al mes","money"]],"Añadir");if(!v)return;const a=num(v[0]);if(!(a>0)){toast("Pon el precio");return}
+  D.fij.push({id:uid(),t:"out",a,c:subsCat(),n,app:n,from:nowMk()});save();paint();toast(`${n} añadida ✓`)};
+ paint();
+ o.querySelector("#apL").onclick=async e=>{const b=e.target.closest("button");if(!b)return;const n=b.dataset.n,f=appFij(n);
+  if(f){if(await confirmD(n,`¿Ya no pagas ${n}? Dejará de contarse desde este mes.`,"Quitar")){stopFij(f);save();paint()}return}add(n)};
+ o.querySelector("#apOther").onclick=async()=>{const v=await ask("Otra app","Escribe el nombre y lo que pagas al mes.",[["Nombre","name"],["Precio al mes","money"]],"Añadir");if(!v||!v[0])return;
+  const a=num(v[1]);if(!(a>0)){toast("Pon el precio");return}if(appFij(v[0])){toast("Ya la tienes");return}
+  D.fij.push({id:uid(),t:"out",a,c:subsCat(),n:v[0].slice(0,30),app:v[0].slice(0,30),from:nowMk()});save();paint();toast("Añadida ✓")}}
+
+/* ---------- Categorías propias ---------- */
+const firstEmoji=s=>{s=(s||"").trim();if(!s)return "";try{const seg=new Intl.Segmenter("es",{granularity:"grapheme"});const g=[...seg.segment(s)][0];return g?g.segment:""}catch(e){return [...s][0]||""}};
+async function newCat(t){const v=await ask(t==="in"?"Nueva categoría de ingreso":"Nueva categoría","Ponle un nombre y, si quieres, un emoji.",[["Nombre","name"],["Emoji (opcional)","name"]],"Crear");
+ if(!v||!v[0]){return null}const L=catsOf(t),ex=Object.entries(L).find(([,x])=>norm(x[1])===norm(v[0]));if(ex){toast("Esa categoría ya existe");return ex[0]}
+ const k="c"+uid();L[k]=[firstEmoji(v[1])||"🏷️",v[0].slice(0,30)];save();render();return k}
+function catsSheet(){let t="out";const o=overlay(`<div class="sheet"><div class="sh2"><h3>Mis categorías</h3><button class="x">×</button></div>
+  <div class="seg"><button data-t="out" class="on">Gastos</button><button data-t="in">Ingresos</button></div><div id="cmL"></div>
+  <button class="btn" id="cmNew" style="max-width:none">＋ Nueva categoría</button><p class="small" style="text-align:center">Toca una para cambiarle el nombre, el emoji o borrarla</p></div>`);
+ const close=()=>o.remove();o.querySelector(".x").onclick=close;o.onclick=e=>{if(e.target===o)close()};
+ const cnt=k=>D.mov.filter(m=>(m.t==="in"?"in":"out")===t&&m.c===k).length+D.fij.filter(f=>((f.t||"out")==="in"?"in":"out")===t&&f.c===k).length;
+ const paint=()=>{o.querySelector(".seg").classList.toggle("in",t==="in");o.querySelectorAll(".seg button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  o.querySelector("#cmL").innerHTML=Object.entries(catsOf(t)).map(([k,[e,n]])=>{const c=cnt(k);return`<button class="mv" data-k="${k}"><div class="e">${esc(e)}</div><div class="m"><b>${esc(n)}</b><span>${c?c+" apunte"+(c===1?"":"s"):"Sin apuntes"}</span></div><div class="a" style="color:var(--muted)">›</div></button>`}).join("")};
+ paint();o.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{t=b.dataset.t;paint()});
+ o.querySelector("#cmNew").onclick=async()=>{await newCat(t);paint()};
+ o.querySelector("#cmL").onclick=async e=>{const b=e.target.closest(".mv");if(!b)return;const k=b.dataset.k,L=catsOf(t),[e0,n0]=L[k],fb=FALL[t],canDel=k!==fb;
+  const d=overlay(`<div class="dlg"><div class="sh2"><h3>Editar categoría</h3><button class="x">×</button></div>
+   <label class="fld"><span>Nombre</span><input id="ceN" type="text" maxlength="30" autocapitalize="sentences" value="${esc(n0)}"></label>
+   <label class="fld"><span>Emoji</span><input id="ceE" type="text" value="${esc(e0)}"></label>
+   <button class="btn ok" style="max-width:none">Guardar</button>${canDel?'<button class="del">Borrar categoría</button>':'<p class="small" style="text-align:center">Esta no se puede borrar: es donde van los apuntes sin categoría.</p>'}</div>`,true);
+  d.querySelector(".x").onclick=()=>d.remove();
+  d.querySelector(".ok").onclick=()=>{const n=d.querySelector("#ceN").value.trim();if(!n){toast("Pon un nombre");return}L[k]=[firstEmoji(d.querySelector("#ceE").value)||e0,n.slice(0,30)];save();d.remove();paint();render()};
+  if(canDel)d.querySelector(".del").onclick=async()=>{const c=cnt(k);d.remove();
+   if(!await confirmD("Borrar categoría",c?`Sus ${c} apunte${c===1?"":"s"} pasarán a «${L[fb]?L[fb][1]:"Otros"}». No se borra ningún gasto.`:"¿Seguro?","Borrar"))return;
+   D.mov.forEach(m=>{if((m.t==="in"?"in":"out")===t&&m.c===k)m.c=fb});D.fij.forEach(f=>{if(((f.t||"out")==="in"?"in":"out")===t&&f.c===k)f.c=fb});
+   delete L[k];if(filt.endsWith(":"+k))filt="all";save();paint();render();toast("Categoría borrada")}}}
+
+/* ---------- Barra rápida: «25 uñas», «ayer 12 cena», «cobré 1500 nómina» ---------- */
+const KW={ropa:"ropa camiseta camisa pantalon vaqueros vestido falda zapatos zapatillas botas sandalias abrigo chaqueta jersey sudadera bolso complementos",
+ unas:"unas manicura pedicura semipermanente pelo peluqueria tinte mechas maquillaje crema cremas depilacion cejas pestanas belleza perfume estetica",
+ libros:"libro libros novela ebook",
+ opos:"oposicion oposiciones opos academia temario preparador preparadora tasa tasas examen programacion",
+ master:"master matricula creditos tfm universidad",
+ comida:"restaurante cena comida comer cafe cafes bar cerveza copas desayuno merienda pizza hamburguesa tapas",
+ super:"super supermercado mercado alimentacion compra fruteria panaderia",
+ compras:"compras tienda online pedido regalo regalos cumple cumpleanos decoracion electronica",
+ trans:"gasolina gasoil diesel bus autobus tren metro taxi parking aparcamiento peaje coche transporte billete",
+ casa:"alquiler luz agua gas internet comunidad casa hogar",
+ subs:"suscripcion suscripciones plataforma streaming musica series movil telefono tarifa",
+ salud:"farmacia medico dentista gimnasio gym fisio pilates yoga deporte",
+ viajes:"viaje hotel vuelo avion alojamiento apartamento vacaciones escapada"};
+const norm=s=>s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+function parseQuick(txt){const s=norm(txt),mm=s.match(/(\d+(?:[.,]\d{1,2})?)/);if(!mm)return null;const a=num(mm[1]);if(!(a>0))return null;
+ const d=new Date();if(/\bantes de ayer\b|\banteayer\b/.test(s))d.setDate(d.getDate()-2);else if(/\bayer\b/.test(s))d.setDate(d.getDate()-1);
+ const isIn=/\b(ingreso|nomina|cobre|cobro|cobrado|me pagaron|me han pagado|paga extra)\b/.test(s);
+ const w=" "+s.replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ")+" ",L=catsOf(isIn?"in":"out");let c=null;
+ for(const[k,[,nm]]of Object.entries(L)){const q=norm(nm).replace(/[^a-z0-9 ]/g," ").trim();if(!q)continue;if(w.includes(" "+q+" ")||q.split(" ").some(x=>x.length>=4&&w.includes(" "+x+" "))){c=k;break}}
+ if(!c&&isIn)c=/\bclases?\b/.test(s)&&L.clases?"clases":/\bnomina\b|\bpaga\b/.test(s)&&L.nomina?"nomina":null;
+ if(!c&&!isIn){for(const[k,v]of Object.entries(KW)){if(L[k]&&v.split(" ").some(x=>w.includes(" "+x+" "))){c=k;break}}}
+ if(!c)c=L[FALL[isIn?"in":"out"]]?FALL[isIn?"in":"out"]:Object.keys(L)[0];
+ let n=txt.replace(mm[1],"").replace(/€|euros?/gi,"").replace(/(^|\s)(antes de ayer|anteayer|ayer|hoy|gasto|gaste|gasté|ingreso|cobré|cobre|me pagaron|me han pagado)(?=\s|$)/gi," ").replace(/\s+/g," ").trim();
+ n=n.replace(/^(en|de|del|la|el)\s+/i,"");n=n.charAt(0).toUpperCase()+n.slice(1);
+ return{id:uid(),t:isIn?"in":"out",a,c,n,d:dk(d),ts:Date.now()}}
+/* ---------- Chat: cambia la app escribiendo ---------- */
+function answer(q,html){const tt=$("toast");if(tt)tt.remove();let a=$("ans");if(!a){a=document.createElement("div");a.id="ans";document.body.appendChild(a)}
+ a.innerHTML=`<button class="cl" aria-label="Cerrar">×</button><div class="q">${esc(q)}</div><div>${html}</div>`;a.querySelector(".cl").onclick=()=>a.remove()}
+const HELP=`Puedo apuntar y cambiar cosas de la app. Escríbeme así:<ul>
+<li><b>25 uñas</b> · <b>ayer 12 cena</b> · <b>cobré 1450 nómina</b></li>
+<li><b>nueva categoría Mascota 🐶</b></li><li><b>cambia Uñas por Belleza</b></li><li><b>borra la categoría Viajes</b></li>
+<li><b>tengo Spotify 11,99</b> · <b>quita Netflix</b></li><li><b>límite 600</b> · <b>quita el límite</b></li>
+<li><b>cuánto llevo en ropa</b> · <b>cuánto me queda</b></li><li><b>busca academia</b></li>
+<li><b>borra el último</b> · <b>copia de seguridad</b> · <b>bloquear</b></li></ul>`;
+function findCat(name,t){const q=norm(name).replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();if(!q)return null;
+ const ts=t?[t]:["out","in"];for(const tt of ts){const L=catsOf(tt),E=Object.entries(L);
+  const f=E.find(([,x])=>norm(x[1])===q)||E.find(([,x])=>norm(x[1]).startsWith(q)||q.startsWith(norm(x[1])))||E.find(([,x])=>norm(x[1]).split(/\s+/).some(w=>w.length>=4&&q.split(" ").includes(w)));
+  if(f)return{t:tt,k:f[0]}}return null}
+const emo=s=>{const m=s.match(/\p{Extended_Pictographic}[\u{FE0F}\u{200D}\p{Extended_Pictographic}]*/u);return m?m[0]:""};
+const noEmo=s=>s.replace(/\p{Extended_Pictographic}[\u{FE0F}\u{200D}\p{Extended_Pictographic}]*/gu,"").trim();
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+function command(v){const s=norm(v).replace(/[¿?¡!.]/g,"").trim();let m;const mk=curMk(),it=monthItems(mk);
+ if(/^(ayuda|help|que puedes hacer|como funciona|\?)$/.test(s))return HELP;
+ if(/^(cambia|cambiar|pon|quiero)\b.*\b(color|colores|letra|fondo|diseno|logo|tema)\b/.test(s))return "Los colores, el logo y el diseño no los puedo cambiar desde aquí. Pídeselo a quien te instaló la app y te lo cambia.";
+ if(m=v.match(/^\s*(?:nueva|crea|crear|añade|anade|pon)\s+(?:una\s+)?categor[ií]a(?:\s+de\s+(gasto|ingreso)s?)?\s+(.+)$/i)){const t=m[1]&&norm(m[1])==="ingreso"?"in":"out",n=noEmo(m[2]).replace(/^(llamada|que se llame)\s+/i,"");
+  if(!n)return "Dime el nombre, por ejemplo «nueva categoría Mascota»";if(findCat(n,t)&&norm(catOf(t,findCat(n,t).k)[1])===norm(n))return `Ya tienes «${esc(n)}».`;
+  catsOf(t)["c"+uid()]=[emo(m[2])||"🏷️",cap(n).slice(0,30)];save();render();return `Hecho ✓ Nueva categoría <b>${esc(emo(m[2])||"🏷️")} ${esc(cap(n))}</b>.`}
+ if(m=v.match(/^\s*(?:cambia|cambiar|renombra|renombrar)\s+(?:el nombre de\s+)?(?:la\s+)?(?:categor[ií]a\s+)?(.+?)\s+(?:por|a|en)\s+(.+)$/i)){const f=findCat(m[1]);if(!f)return `No encuentro la categoría «${esc(m[1])}».`;
+  const L=catsOf(f.t),old=L[f.k][1],n=noEmo(m[2]),e=emo(m[2]);if(!n&&e){L[f.k][0]=e}else{L[f.k]=[e||L[f.k][0],cap(n).slice(0,30)]}save();render();return `Hecho ✓ «${esc(old)}» ahora es <b>${esc(L[f.k][0])} ${esc(L[f.k][1])}</b>.`}
+ if(m=v.match(/^\s*(?:borra|borrar|quita|quitar|elimina|eliminar)\s+(?:la\s+)?categor[ií]a\s+(.+)$/i)){const f=findCat(m[1]);if(!f)return `No encuentro la categoría «${esc(m[1])}».`;
+  if(f.k===FALL[f.t])return "Esa no se puede borrar: es donde van los apuntes sin categoría.";const L=catsOf(f.t),n=L[f.k][1],fb=FALL[f.t];
+  D.mov.forEach(x=>{if((x.t==="in"?"in":"out")===f.t&&x.c===f.k)x.c=fb});D.fij.forEach(x=>{if(((x.t||"out")==="in"?"in":"out")===f.t&&x.c===f.k)x.c=fb});
+  delete L[f.k];filt="all";save();render();return `Hecho ✓ Borrada «${esc(n)}». Sus apuntes pasan a «${esc(catOf(f.t,fb)[1])}».`}
+ if(/^(quita|quitar|borra|sin)\s+(el\s+)?(limite|presupuesto)/.test(s)){D.cfg.pres=0;save();render();return "Hecho ✓ Ya no tienes límite de gasto."}
+ if(m=s.match(/^(?:limite|presupuesto|quiero gastar (?:como mucho|maximo)|gastar como mucho|maximo)(?: de| al mes| mensual)?\s*(\d+(?:[.,]\d{1,2})?)/)){D.cfg.pres=num(m[1]);save();render();return `Hecho ✓ Límite de <b>${money(D.cfg.pres)}</b> al mes. Lo verás en la tarjeta de arriba.`}
+ if(m=v.match(/^\s*(?:quita|quitar|borra|cancela|cancele|ya no (?:tengo|pago)|he quitado|di de baja)\s+(?:la\s+app\s+|el\s+|la\s+)?(.+)$/i)){const n=norm(m[1]).trim(),f=D.fij.find(x=>x.app&&(!x.to||x.to>=nowMk())&&norm(x.app)===n)||D.fij.find(x=>(!x.to||x.to>=nowMk())&&norm(x.n||"").startsWith(n));
+  if(f){stopFij(f);save();render();return `Hecho ✓ <b>${esc(f.n||f.app)}</b> deja de contarse desde este mes.`}}
+ if(m=v.match(/^\s*(?:tengo|pago|añade|anade|pon|suscripci[oó]n(?: a)?|me he hecho)\s+(?:la\s+app\s+)?([^\d]+?)\s+(\d+(?:[.,]\d{1,2})?)\s*(?:€|euros?)?(?:\s*(?:al|\/)\s*mes)?\s*$/i)){
+  const raw=m[1].trim(),a=num(m[2]),known=APPS.find(x=>norm(x[1])===norm(raw)),n=known?known[1]:cap(raw).slice(0,30);
+  if(appFij(n))return `Ya tienes ${esc(n)} apuntada.`;D.fij.push({id:uid(),t:"out",a,c:subsCat(),n,app:n,from:nowMk()});save();render();return `Hecho ✓ <b>${esc(n)}</b> · ${money(a)} al mes, se apunta sola cada mes.`}
+ if(/^(borra|quita|deshaz|elimina)\s+(el\s+)?(ultimo|ultima)/.test(s)||s==="deshacer"){const l=D.mov.slice().sort((a,b)=>(b.ts||0)-(a.ts||0))[0];if(!l)return "No hay nada que borrar.";
+  D.mov=D.mov.filter(x=>x!==l);save();render();return `Hecho ✓ Borrado: ${l.t==="in"?"+":"−"}${money(l.a)} · ${esc(l.n||catOf(l.t,l.c)[1])}.`}
+ if(/^cuanto me queda/.test(s)||/^(como voy|balance)$/.test(s)){const inc=sum(it,"in"),out=sum(it,"out");let r=`Este mes te quedan <b>${money(inc-out)}</b> (ingresos ${money(inc)} − gastos ${money(out)}).`;
+  if(D.cfg.pres)r+=` Del límite te quedan <b>${money(D.cfg.pres-out)}</b>.`;return r}
+ if(m=s.match(/^cuanto (?:llevo|he gastado|gasto|gaste|me he gastado|va)(?: gastado)?(?: en| de)?\s*(.*?)\s*(este ano|este año|en el ano|este mes)?$/)){const yr=m[2]&&m[2].includes("an"),q=m[1].trim();
+  const pool=yr?D.mov.filter(x=>x.d.startsWith(String(cur.getFullYear()))):it;
+  if(!q){const t=sum(pool,"out");return `${yr?"Este año":"Este mes"} llevas <b>${money(t)}</b> gastados.`}
+  const f=findCat(q,"out");if(f){let t=yr?yearCat(String(cur.getFullYear()),f.k):it.filter(x=>x.t==="out"&&x.c===f.k).reduce((a,x)=>a+x.a,0);
+   return `En <b>${esc(catOf("out",f.k)[1])}</b> llevas <b>${money(t)}</b> ${yr?"este año":"este mes"}.`}
+  const hits=pool.filter(x=>x.t==="out"&&norm(x.n||"").includes(norm(q)));return hits.length?`En «${esc(q)}» llevas <b>${money(hits.reduce((a,x)=>a+x.a,0))}</b> ${yr?"este año":"este mes"} (${hits.length} apunte${hits.length===1?"":"s"}).`:`No encuentro gastos de «${esc(q)}» ${yr?"este año":"este mes"}.`}
+ if(m=v.match(/^\s*(?:busca|buscar|encuentra)\s+(.+)$/i)){const q=norm(m[1]).trim(),hits=D.mov.filter(x=>norm(x.n||"").includes(q)||norm(catOf(x.t,x.c)[1]).includes(q)).sort((a,b)=>b.d.localeCompare(a.d));
+  if(!hits.length)return `No encuentro nada con «${esc(m[1])}».`;return `${hits.length} apunte${hits.length===1?"":"s"} · total <b>${money(hits.filter(x=>x.t==="out").reduce((a,x)=>a+x.a,0))}</b><ul>`+hits.slice(0,8).map(x=>`<li>${new Date(x.d+"T12:00").toLocaleDateString("es-ES",{day:"numeric",month:"short"})} · ${esc(x.n||catOf(x.t,x.c)[1])} · ${x.t==="in"?"+":"−"}${money(x.a)}</li>`).join("")+"</ul>"}
+ if(/^(haz |hacer )?(una )?copia( de seguridad)?$/.test(s)){setTimeout(backup,50);return "Vale, vamos a hacer la copia."}
+ if(/^(bloquea|bloquear|cerrar|salir)$/.test(s)){setTimeout(()=>location.reload(),400);return "Bloqueando…"}
+ if(/^(face ?id|huella|activa face ?id|activar face ?id|activa la huella)$/.test(s)){$("cfgB").classList.remove("hide");$("cfgA").textContent="▾";$("bioSet").scrollIntoView({behavior:"smooth",block:"center"});return "Pulsa el botón <b>🙂 Activar Face ID</b> que te he marcado en Ajustes."}
+  return null}
+$("qf").onsubmit=e=>{e.preventDefault();const v=$("qi").value.trim();if(!v)return;
+ const r=command(v);if(r){$("qi").value="";$("qi").blur();answer(v,r);return}
+ const a0=$("ans");if(a0)a0.remove();
+ const m=parseQuick(v);
+ if(!m){answer(v,"No te he entendido 🙈 Para apuntar pon una cantidad, por ejemplo <b>25 uñas</b>. Escribe <b>ayuda</b> para ver qué más puedo hacer.");return}
+ D.mov.push(m);save();$("qi").value="";$("qi").blur();cur=new Date(m.d+"T12:00");cur.setDate(1);render();
+ const[e2,n2]=catOf(m.t,m.c);toast(`${m.t==="in"?"+":"−"}${money(m.a)} · ${e2} ${n2}`,()=>{D.mov=D.mov.filter(x=>x!==m);save();render()})};
+
+/* ---------- Copias de seguridad (cifradas con el PIN) ---------- */
+async function backup(){const pin=await ask("Copia de seguridad","La copia se cifra con tu PIN. Para restaurarla te lo pedirá.",[["Tu PIN","pin"]],"Hacer copia");if(!pin)return;
+ if(!/^\d{4,8}$/.test(pin[0])){toast("PIN no válido");return}
+ const salt=b64(rnd(16)),key=await pinKey(pin[0],salt,ITER);D.lastBak=Date.now();
+ const file=JSON.stringify({app:"afm-gastos",v:1,salt,iter:ITER,data:await encStr(JSON.stringify(D),key)});
+ const name=`mis-gastos-copia-${dk(new Date())}.json`,blob=new Blob([file],{type:"application/json"});
+ const f=new File([blob],name,{type:"application/json"});
+ try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:"Copia de Mis gastos"})}else dl(blob,name)}
+ catch(e){if(e&&e.name==="AbortError"){D.lastBak=0;return}dl(blob,name)}
+ save();render();toast("Copia hecha ✓ Guárdala en Archivos o iCloud")}
+function dl(blob,name){const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
+$("rest").onclick=()=>$("restF").click();
+$("restF").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
+ let j;try{j=JSON.parse(await f.text());if(j.app!=="afm-gastos")throw 0}catch(_){say("Archivo no válido","<p>Ese archivo no es una copia de Mis gastos.</p>");return}
+ const pin=await ask("Restaurar copia","Escribe el PIN que tenías cuando hiciste la copia.",[["PIN de la copia","pin"]],"Restaurar");if(!pin)return;
+ let d;try{d=JSON.parse(await decStr(j.data,await pinKey(pin[0],j.salt,j.iter)))}catch(_){toast("PIN incorrecto para esa copia");return}
+ const ids=new Set(D.mov.map(m=>m.id)),fids=new Set(D.fij.map(f=>f.id));let n=0;
+ (d.mov||[]).forEach(m=>{if(!ids.has(m.id)){D.mov.push(m);n++}});(d.fij||[]).forEach(f=>{if(!fids.has(f.id)){D.fij.push(f);n++}});
+ if(!D.cfg.pres&&d.cfg&&d.cfg.pres)D.cfg.pres=d.cfg.pres;
+ ["cats","icats"].forEach(k=>{if(d[k])for(const[c,v]of Object.entries(d[k]))if(!D[k][c])D[k][c]=v});save();render();say("Copia restaurada",`<p>Se han recuperado <b>${n}</b> apuntes.</p>`)};
+$("csv").onclick=()=>{const it=monthItems(curMk()),q=s=>'"'+String(s).replace(/"/g,'""')+'"';
+ const rows=[["Fecha","Tipo","Categoría","Nota","Importe"]].concat(it.map(m=>[m.d,m.t==="in"?"Ingreso":"Gasto",catOf(m.t,m.c)[1],m.n||"",(m.t==="in"?"":"-")+m.a.toFixed(2).replace(".",",")]));
+ const blob=new Blob(["﻿"+rows.map(r=>r.map(q).join(";")).join("\r\n")],{type:"text/csv"});const name=`gastos-${curMk()}.csv`,f=new File([blob],name,{type:"text/csv"});
+ if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f]}).catch(()=>{});else dl(blob,name)};
+
+/* ---------- Ajustes de seguridad ---------- */
+$("pinChg").onclick=async()=>{const v=await ask("Cambiar PIN","",[["PIN actual","pin"],["PIN nuevo","pin"],["Repite el nuevo","pin"]],"Cambiar");if(!v)return;
+ try{let w=ub64(meta.wl);if(meta.dv){const d=await deviceKey(false);w=await unseal(d,w)}await unseal(await pinKey(v[0],meta.salt,meta.iter),w)}catch(e){toast("El PIN actual no es correcto");return}
+ if(!/^\d{4,8}$/.test(v[1])||v[1]!==v[2]){toast("El PIN nuevo no es válido o no coincide");return}await wrapPin(v[1]);toast("PIN cambiado ✓")};
+$("recNew").onclick=async()=>{if(!await confirmD("Nuevo código","El código anterior dejará de valer. ¿Crear uno nuevo?","Crear"))return;
+ const code=genCode();meta.wr=b64(await seal(await recKey(code),dekRaw));saveMeta();showCode(code,"Nuevo código")};
+$("bioSet").onclick=async()=>{if(meta.bio){if(await confirmD("Face ID","¿Quitar la entrada con Face ID?","Quitar")){delete meta.bio;saveMeta();paintBio()}return}
+ if(!await bioAvail()){say("No disponible","<p>Este móvil no permite Face ID aquí. Sigue entrando con el PIN.</p>");return}
+ try{await bioOn();paintBio();toast("Face ID activado ✓")}catch(e){say("No se ha podido",`<p>${e==="noprf"?"Hace falta tener el iPhone actualizado (iOS 18 o más nuevo) y abrir la app desde el icono.":"Se ha cancelado o no se ha podido activar. Prueba otra vez."}</p>`)}};
+const paintBio=()=>{$("bioSet").textContent=meta.bio?"🙂 Quitar Face ID":"🙂 Activar Face ID"};
+$("cPres").onchange=()=>{const n=num($("cPres").value);D.cfg.pres=n>0?n:0;save();render()};
+
+/* ---------- Arranque ---------- */
+let started=false,hiddenAt=0;
+function start(){if(started)return;started=true;
+ const h=new Date().getHours();$("greet").textContent=(h<14?"Buenos días":h<21?"Buenas tardes":"Buenas noches")+" ✨";paintBio();
+ $("prevM").onclick=()=>{cur.setMonth(cur.getMonth()-1);render()};$("nextM").onclick=()=>{cur.setMonth(cur.getMonth()+1);render()};
+ let sx=0,sy=0;const hero=document.querySelector(".hero");hero.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
+ hero.addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){cur.setMonth(cur.getMonth()+(dx<0?1:-1));render()}});
+ $("addOut").onclick=()=>sheet(null,{t:"out"});$("addIn").onclick=()=>sheet(null,{t:"in"});$("addFij").onclick=()=>sheet(null,{fij:true});
+ $("ch").onclick=e=>{const g=e.target.closest(".g");if(!g)return;chSel=g.dataset.mk;chart()};
+ $("chips").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;filt=b.dataset.f;render()};
+ $("list").onclick=e=>{const b=e.target.closest(".mv");if(!b)return;const id=b.dataset.id;
+  if(id.startsWith("f:")){const f=D.fij.find(x=>x.id===id.slice(2));if(f)sheet(f,{fij:true})}else{const m=D.mov.find(x=>x.id===id);if(m)sheet(m)}};
+ $("fijL").onclick=e=>{const b=e.target.closest(".mv");if(!b)return;const f=D.fij.find(x=>x.id===b.dataset.fij);if(f)sheet(f,{fij:true})};
+ const tog=(btn,body,arr)=>$(btn).onclick=()=>{const h=$(body).classList.toggle("hide");$(arr).textContent=h?"▸":"▾"};
+ tog("fijTog","fijB","fijA");tog("cfgTog","cfgB","cfgA");
+ $("appsBtn").onclick=appsSheet;$("bak").onclick=backup;$("catMng").onclick=catsSheet;$("lockBtn").onclick=()=>location.reload();
+ document.addEventListener("visibilitychange",()=>{if(document.hidden)hiddenAt=Date.now();else if(hiddenAt&&Date.now()-hiddenAt>LOCKMIN*60e3)location.reload()});
+ render();
+ if(!D.lastBak&&D.mov.length>=15||D.lastBak&&Date.now()-D.lastBak>21*864e5)setTimeout(()=>toast("Hace tiempo sin copia de seguridad. Hazla en Ajustes."),1500)}
+</script>
+</body></html>
