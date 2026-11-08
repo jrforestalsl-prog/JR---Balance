@@ -24,6 +24,25 @@ input,select{font:inherit;color:var(--ink)}
 .hide{display:none!important}
 .serif{font-family:var(--serif)}
 
+/* Ambiente de temporada */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+#fx span{position:absolute;top:-8vh;animation:fall linear infinite;will-change:transform}
+@keyframes fall{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(28px,58vh) rotate(140deg)}100%{transform:translate(-12px,118vh) rotate(280deg)}}
+@media (prefers-reduced-motion:reduce){#fx{display:none}}
+#lock,#app{position:relative;z-index:1}
+.ev{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--navy);margin-top:14px}
+/* Metas */
+.goal{background:#fff;border:1px solid var(--line);border-radius:18px;padding:13px 14px;margin-bottom:8px}
+.goal .h{display:flex;align-items:center;gap:10px}
+.goal .h i{font-style:normal;font-size:22px}
+.goal .h b{flex:1;font-size:15px}
+.goal .h small{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.goal .tr{height:9px;background:#F1E7DD;border-radius:9px;margin:10px 0 8px;overflow:hidden}
+.goal .tr i{display:block;height:100%;background:var(--green);border-radius:9px}
+.goal .f{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#4A5466}
+.goal .f{gap:8px}.goal .f button{flex:none;white-space:nowrap;background:var(--green2);color:var(--green);font-weight:700;border-radius:10px;padding:7px 12px;font-size:13px}
+.goal.done{background:var(--green2)}
+.gtpl{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 /* Pantalla de entrada */
 #lock{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px 40px;text-align:center}
 #lock img{width:132px;height:132px}
@@ -114,6 +133,10 @@ input,select{font:inherit;color:var(--ink)}
 .tg b{width:46px;height:28px;border-radius:14px;background:#D9D4CE;position:relative;transition:.15s;flex:none}
 .tg b:after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .tg.on b{background:var(--green)}.tg.on b:after{left:21px}
+.bkp{margin:0;color:#4A5466;font-size:14px;line-height:1.45}
+.tip{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:7px;font-size:14px;line-height:1.45;color:#3A4558}
+.tip i{font-style:normal;font-size:20px;line-height:1.2}
+.tip.good{background:var(--green2);border-color:#D3E0C8}
 .empty{color:var(--muted);text-align:center;padding:14px 4px;font-size:14px}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin:0 -2px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
@@ -190,6 +213,7 @@ input,select{font:inherit;color:var(--ink)}
 
 <div id="lock">
  <img src="logo.png" alt="">
+ <div id="lEv" class="ev hide"></div>
  <h1 id="lT">Hola</h1>
  <p class="sub" id="lS">Entra con tu PIN</p>
  <button class="btn sec hide" id="bioBtn">Entrar con Face ID</button>
@@ -214,12 +238,18 @@ input,select{font:inherit;color:var(--ink)}
  </div>
  <div class="hb"><button class="bOut" id="addOut">＋ Gasto</button><button class="bIn" id="addIn">＋ Ingreso</button><button class="bPh" id="addPh" aria-label="Foto de ticket">📷</button></div>
 
+ <div id="secGoals"><div class="sh"><h3>Mis metas</h3><small id="goS">Lo que vas apartando</small></div>
+ <div id="goals"></div></div>
+
  <div id="secCats"><div class="sh"><h3>¿En qué se va?</h3><small>Este mes</small></div>
  <div class="card" id="cats"></div></div>
 
  <div id="secChart"><div class="sh"><h3>Últimos 6 meses</h3><small>Toca un mes</small></div>
  <div class="card"><div class="lgd"><span><i style="background:#2D5DA6"></i>Gastos</span><span><i style="background:#5A9440"></i>Ingresos</span></div>
   <div id="ch"></div><div id="chI"></div><div id="chM"></div></div></div>
+
+ <div id="secTips"><div class="sh"><h3>¿En qué fallo?</h3><small>Según tus datos</small></div>
+ <div id="tips"></div></div>
 
  <div id="secMov"><div class="sh"><h3>Movimientos</h3><small id="mvN"></small></div>
  <div class="chips" id="chips"></div>
@@ -228,22 +258,27 @@ input,select{font:inherit;color:var(--ink)}
  <div id="secFij"><div class="sh"><button class="acc" id="fijTog"><h3><span id="fijA">▸</span> Gastos fijos</h3><small id="fijS">Academia, suscripciones… cada mes</small></button></div>
  <div id="fijB" class="hide"><button class="btn grn" id="appsBtn" style="max-width:none;margin:0 0 10px">📱 Elegir mis apps (Spotify, Netflix…)</button><div id="fijL"></div><button class="btn sec" id="addFij" style="max-width:none;margin-top:4px">＋ Añadir gasto fijo mensual</button></div></div>
 
- <div class="sh"><button class="acc" id="cfgTog"><h3><span id="cfgA">▸</span> Ajustes y copias</h3><small id="bakS"></small></button></div>
+ <div class="sh"><h3>Copias de seguridad</h3><small id="bakS"></small></div>
+ <div class="card"><p class="bkp">Guarda una copia en Archivos o iCloud. Si cambias de móvil o se borra la app, la cargas y recuperas todo, también las fotos.</p>
+  <div class="hb" style="margin:10px 0 0"><button class="bOut" id="bak">💾 Guardar copia</button><button class="bIn" id="rest">📂 Cargar copia</button></div>
+  <p class="bkp" style="margin:10px 0 0;font-size:12px">Al cargar una copia se <b>añaden</b> sus datos a los que ya tienes, sin repetir nada.</p></div>
+
+ <div class="sh"><button class="acc" id="cfgTog"><h3><span id="cfgA">▸</span> Ajustes</h3></button></div>
  <div id="cfgB" class="hide">
   <div class="cfg">Quiero gastar como mucho <input id="cPres" inputmode="decimal" placeholder="0"> € al mes</div>
   <div class="tools">
    <button id="catMng" style="grid-column:1/-1">🏷️ Mis categorías (crear, cambiar, borrar)</button>
-   <button id="bak">⬇ Copia de seguridad</button><button id="rest">⬆ Restaurar copia</button>
    <button id="csv">📊 Exportar mes (Excel)</button><button id="bioSet">🙂 Activar Face ID</button>
    <button id="pinChg">🔑 Cambiar PIN</button><button id="recNew">🧾 Nuevo código de recuperación</button>
   </div>
-  <input type="file" id="restF" accept=".json,application/json" class="hide">
+  <input type="file" id="restF" class="hide">
  </div>
  <div class="foot">Datos cifrados solo en este móvil · Haz copia de vez en cuando</div>
 </div>
 
 <div id="qb" class="hide"><form id="qf" autocomplete="off"><input id="qi" placeholder="Apunta o pide algo: «25 uñas», «ayuda»…" enterkeyhint="send"><button type="submit" aria-label="Apuntar">↑</button></form></div>
 
+<div id="fx" aria-hidden="true"></div>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
@@ -253,7 +288,7 @@ const ub64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0)),rnd=n=>crypto.getRando
 const cat2=(a,b)=>{const o=new Uint8Array(a.length+b.length);o.set(a);o.set(b,a.length);return o};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let ls=null;try{ls=window.localStorage}catch(e){}
-const MKEY="afm-vault-v1",DKEY="afm-data-v1",ITER=600000,LOCKMIN=5;
+const MKEY="afm-vault-v1",DKEY="afm-data-v1",ITER=600000,LOCKMIN=15;
 
 /* ---------- Cifrado (todo en el móvil, nada sale) ---------- */
 let meta=null;try{meta=JSON.parse(ls.getItem(MKEY)||"null")}catch(e){}
@@ -276,7 +311,32 @@ const idb=fn=>new Promise((ok,ko)=>{const r=indexedDB.open("afm-vault",1);r.onup
  r.onsuccess=()=>{const db=r.result,t=db.transaction("k","readwrite"),q=fn(t.objectStore("k"));t.oncomplete=()=>{db.close();ok(q.result)};t.onerror=()=>ko(t.error)}});
 async function deviceKey(create){try{let k=await idb(s=>s.get("dev"));if(!k&&create){k=await S.generateKey({name:"AES-GCM",length:256},false,["encrypt","decrypt"]);await idb(s=>s.put(k,"dev"))}return k||null}catch(e){return null}}
 async function wrapPin(pin){const salt=b64(rnd(16));let w=await seal(await pinKey(pin,salt,ITER),dekRaw);const d=await deviceKey(true);if(d)w=await seal(d,w);
- meta=Object.assign(meta||{},{salt,iter:ITER,wl:b64(w),dv:d?1:0,fails:0,until:0});saveMeta()}
+ meta=Object.assign(meta||{},{salt,iter:ITER,wl:b64(w),dv:d?1:0,fails:0,until:0,pl:pin.length});saveMeta()}
+
+/* ---------- Ambiente de temporada y nombre ---------- */
+let myName="Aynara";try{myName=ls.getItem("afm-name")||"Aynara"}catch(e){}
+function season(d=new Date()){const md=(d.getMonth()+1)*100+d.getDate();
+ if(md>=1224&&md<=1226)return{fx:["❄️","✨","🎄"],msg:"¡Feliz Navidad! 🎄",sp:1};
+ if(md>=1230||md===101)return{fx:["✨","🎉","🥂"],msg:"¡Feliz año nuevo! 🥂",sp:1};
+ if(md>=102&&md<=106)return{fx:["✨","👑","⭐"],msg:"Que los Reyes se porten 👑",sp:1};
+ if(md>=1201)return{fx:["❄️","❄️","🎄","✨"],msg:"Ya huele a Navidad 🎄",sp:1};
+ if(md>=1025&&md<=1101)return{fx:["🎃","🦇","🍂"],msg:"Feliz Halloween 🎃",sp:1};
+ if(md>=1125&&md<=1127)return{fx:["🍎","📚","✨"],msg:"¡Feliz Día del Maestro, profe! 🍎",sp:1};
+ if(md>=210&&md<=214)return{fx:["💕","💗","✨"],msg:"Feliz San Valentín 💕",sp:1};
+ if(md>=622&&md<=624)return{fx:["🔥","✨"],msg:"¡Feliz San Xuan! 🔥",sp:1};
+ if(md>=901&&md<=915)return{fx:["📚","🍂","✏️"],msg:"¡Ánimo con el nuevo curso, profe! 📚",sp:1};
+ if(md>=321&&md<=620)return{fx:["🌸","🌼","🌷"],msg:"Feliz primavera 🌸"};
+ if(md>=621&&md<=922)return{fx:["☀️","🌊","🐚"],msg:"Feliz verano ☀️"};
+ if(md>=923)return{fx:["🍂","🍁","🍂"],msg:"Feliz otoño 🍂"};
+ return{fx:["❄️","❄️"],msg:"Abrígate, que hace frío ❄️"}}
+const SEAS=season();
+function fxOn(){let on=true;try{on=ls.getItem("afm-fx")!=="0"}catch(e){}return on}
+function paintFx(){const box=$("fx");box.innerHTML="";if(!fxOn())return;let h="";
+ for(let i=0;i<11;i++){const e=SEAS.fx[i%SEAS.fx.length],l=(i*9.3+Math.random()*6)%100,sz=14+Math.random()*10,du=16+Math.random()*14,de=-Math.random()*du,op=.32+Math.random()*.3;
+  h+=`<span style="left:${l.toFixed(1)}%;font-size:${sz.toFixed(0)}px;opacity:${op.toFixed(2)};animation-duration:${du.toFixed(1)}s;animation-delay:${de.toFixed(1)}s">${e}</span>`}
+ box.innerHTML=h}
+const hello=()=>{const h=new Date().getHours();return h<6?"Buenas noches":h<14?"Buenos días":h<21?"Buenas tardes":"Buenas noches"};
+paintFx();
 
 /* ---------- Entrada ---------- */
 const lErr=t=>{$("lErr").textContent=t||""};
@@ -301,6 +361,8 @@ $("pinBtn").onclick=async()=>{const p1=$("pin1").value.trim(),creating=!meta||!m
   if($("pin2").value.trim()!==p1){lErr("Los dos PIN no coinciden");$("pin2").value="";return}}
  busy(true);try{creating?await createVault(p1):await unlockPin(p1)}catch(e){lErr(e.message||"No se ha podido entrar");$("pin1").value="";busy(false)}};
 ["pin1","pin2"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter")$("pinBtn").click()}));
+// Entra sola al escribir el último número del PIN
+$("pin1").addEventListener("input",()=>{const v=$("pin1").value;if(meta&&meta.wl&&meta.pl&&v.length===meta.pl&&/^\d+$/.test(v)&&!$("pinBtn").disabled)$("pinBtn").click()});
 $("recBtn").onclick=async()=>{lErr("");
  const v=await ask("Recuperar acceso","Escribe el código de recuperación que apuntaste al crear el PIN.",[["Código (XXXX-XXXX-…)","code"]],"Seguir");if(!v)return;
  let raw;try{raw=await unseal(await recKey(v[0]),ub64(meta.wr))}catch(e){lErr("Código incorrecto");return}
@@ -318,8 +380,9 @@ async function bioOn(){const salt=rnd(32);
  const x=c.getClientExtensionResults().prf||{},id=new Uint8Array(c.rawId);if(x.enabled===false)throw "noprf";
  const out=x.results&&x.results.first?new Uint8Array(x.results.first):await prf(id,salt);if(!out)throw "noprf";
  meta.bio={id:b64(id),s:b64(salt),w:b64(await seal(await hkdf(out,"afm-bio"),dekRaw))};saveMeta()}
-$("bioBtn").onclick=async()=>{lErr("");try{const b=meta.bio,out=await prf(ub64(b.id),ub64(b.s));if(!out)throw 0;await finish(await unseal(await hkdf(out,"afm-bio"),ub64(b.w)))}
- catch(e){lErr("No se ha podido con Face ID. Entra con el PIN.")}};
+let bioBusy=false;
+$("bioBtn").onclick=async auto=>{if(bioBusy)return;bioBusy=true;lErr("");try{const b=meta.bio,out=await prf(ub64(b.id),ub64(b.s));if(!out)throw 0;await finish(await unseal(await hkdf(out,"afm-bio"),ub64(b.w)))}
+ catch(e){if(auto!==true)lErr("No se ha podido con Face ID. Entra con el PIN.");$("pin1").focus()}finally{bioBusy=false}};
 
 /* En iPhone, si se abre desde Safari, enseña cómo dejarla en la pantalla de inicio (Apple no permite instalar con un toque) */
 (function installHelp(){const ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
@@ -334,11 +397,16 @@ $("bioBtn").onclick=async()=>{lErr("");try{const b=meta.bio,out=await prf(ub64(b
   <button class="lnk" id="instSkip" style="margin-top:16px">Ahora no, usarla aquí</button>
   <div class="arrow">Compartir<span>↓</span></div>`;
  document.body.appendChild(d);
- $("instSkip").onclick=()=>{try{sessionStorage.setItem("afm-skip-inst","1")}catch(e){}d.remove()}})();
+ $("instSkip").onclick=()=>{try{sessionStorage.setItem("afm-skip-inst","1")}catch(e){}d.remove();if(meta&&meta.bio)$("bioBtn").onclick()}})();
 
 (function initLock(){
- if(!meta||!meta.wl){$("lT").textContent="Bienvenida";$("lS").textContent="Crea un PIN de 4 a 8 números. Lo pedirá siempre al entrar.";busy(false,"Seguir")}
- else{$("recBtn").classList.toggle("hide",!meta.wr);if(meta.bio)$("bioBtn").classList.remove("hide");const h=new Date().getHours();$("lT").textContent=h<14?"Buenos días":h<21?"Buenas tardes":"Buenas noches"}
+ if(!meta||!meta.wl){$("lT").textContent=`Bienvenida, ${myName}`;$("lS").textContent="Crea un PIN de 4 a 8 números. Lo pedirá siempre al entrar.";busy(false,"Seguir")}
+ else{$("recBtn").classList.toggle("hide",!meta.wr);$("lT").textContent=`${hello()}, ${myName}`;if(SEAS.sp){$("lEv").textContent=SEAS.msg;$("lEv").classList.remove("hide")}
+  if(meta.pl){$("pinBtn").classList.add("hide");$("lS").textContent=meta.bio?"Mira el móvil o escribe tu PIN":"Escribe tu PIN"}
+  if(meta.bio){$("bioBtn").classList.remove("hide");$("bioBtn").textContent="🙂 Entrar con Face ID";$("bioBtn").classList.remove("sec");
+   // Intenta Face ID nada más abrir; si el iPhone pide un toque antes, queda el botón
+   setTimeout(()=>{if(!$("inst")&&!document.hidden)$("bioBtn").onclick(true)},250)}
+  else setTimeout(()=>$("pin1").focus(),200)}
  if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 })();
 
@@ -410,17 +478,67 @@ function render(){const mk=curMk(),it=monthItems(mk),inc=sum(it,"in"),out=sum(it
  let last="",h="";shown.forEach(m=>{const day=m.fij?"Fijos del mes":new Date(m.d+"T12:00").toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"});
   if(day!==last){h+=`<div class="day">${day}</div>`;last=day}const[e,n]=catOf(m.t,m.c);
   h+=`<button class="mv" data-id="${esc(m.id)}"><div class="e">${esc(e)}</div><div class="m"><b>${esc(m.n||n)}</b><span>${esc(n)}${m.fij?'<span class="tag">fijo</span>':""}${m.ph?" · 📎 ticket":""}</span></div><div class="a${m.t==="in"?" in":""}">${m.t==="in"?"+":"−"}${money(m.a)}</div></button>`});
- $("list").innerHTML=h||'<div class="empty">Nada apuntado este mes.<br>Pulsa «＋ Gasto» o escribe abajo, por ejemplo «25 uñas».</div>';
+ $("list").innerHTML=h||'<div class="empty">Nada apuntado este mes.<br>Pulsa «＋ Gasto» o escribe abajo, por ejemplo «25 uñas».'+(!D.mov.length&&!D.fij.length?'<br><button class="btn sec" style="margin-top:14px" onclick="document.getElementById(\'restF\').click()">📂 ¿Tienes una copia? Cárgala</button>':"")+'</div>';
  // Fijos
  const nowMk=dk(new Date()).slice(0,7),act=D.fij.filter(f=>!f.to||f.to>=nowMk);
  $("fijS").textContent=act.length?act.length+" · "+money(act.filter(f=>(f.t||"out")==="out").reduce((s,f)=>s+f.a,0))+"/mes":"Academia, suscripciones… cada mes";
  $("fijL").innerHTML=act.map(f=>{const[e,n]=catOf(f.t||"out",f.c);return`<button class="mv" data-fij="${esc(f.id)}"><div class="e">${esc(e)}</div><div class="m"><b>${esc(f.n||n)}</b><span>${esc(n)} · cada mes</span></div><div class="a${f.t==="in"?" in":""}">${money(f.a)}</div></button>`}).join("")||'<div class="empty">Sin gastos fijos</div>';
- chart();
+ chart();tips(mk,it);goals();
  // Copias
  const days=D.lastBak?Math.floor((Date.now()-D.lastBak)/864e5):null;
- $("bakS").textContent=days===null?"Sin copia todavía":days===0?"Copia hecha hoy":`Última copia hace ${days} día${days===1?"":"s"}`;
+ $("bakS").textContent=days===null?"Aún sin copia":days===0?"Copia hecha hoy":`Última copia hace ${days} día${days===1?"":"s"}`;
  $("cPres").value=D.cfg.pres||"";
 }
+
+/* ---------- Mis metas: dinero que va apartando para algo ---------- */
+const GTPL=[["🎓","Oposición",600],["✈️","Viaje",800],["🛟","Colchón para imprevistos",1000],["🎁","Regalos de Navidad",200]];
+function goals(){const G=D.goals||[];
+ if(!G.length){$("goS").textContent="Lo que vas apartando";$("goals").innerHTML=`<div class="card"><p class="bkp" style="margin-bottom:10px">Aparta dinero para algo y mira cómo crece. Por ejemplo:</p><div class="gtpl">${GTPL.map(([e,n],i)=>`<button class="chip" data-tpl="${i}">${e} ${n}</button>`).join("")}<button class="chip" data-tpl="new">＋ Otra</button></div></div>`;return}
+ const tot=G.reduce((a,g)=>a+g.have,0);$("goS").textContent="Apartado: "+money(tot);
+ $("goals").innerHTML=G.map(g=>{const p=g.obj?Math.min(100,g.have/g.obj*100):0,done=g.obj&&g.have>=g.obj;
+  return`<div class="goal${done?" done":""}" data-g="${g.id}"><div class="h"><i>${esc(g.e)}</i><b>${esc(g.n)}</b><small>${Math.round(p)}%</small></div><div class="tr"><i style="width:${p}%"></i></div>
+   <div class="f"><span><b>${money(g.have)}</b> de ${money(g.obj)}${done?" · ¡Conseguida! 🎉":g.obj?" · faltan "+money(g.obj-g.have):""}</span><button data-add="${g.id}">＋ Apartar</button></div></div>`}).join("")+'<button class="chip" data-tpl="new" style="margin-top:2px">＋ Nueva meta</button>'}
+async function newGoal(tpl){let e="🎯",n="",obj=0;if(tpl){[e,n]=tpl}
+ const v=await ask(n?`${e} ${n}`:"Nueva meta",n?"¿Cuánto quieres juntar?":"Ponle nombre y cuánto quieres juntar.",n?[["Objetivo (€)","money"]]:[["Nombre","name"],["Objetivo (€)","money"]],"Crear");if(!v)return;
+ if(!n){n=noEmo(v[0]).slice(0,30);e=emo(v[0])||"🎯";obj=num(v[1])}else obj=num(v[0]);if(!n){toast("Pon un nombre");return}if(!(obj>0)){toast("Pon cuánto quieres juntar");return}
+ (D.goals=D.goals||[]).push({id:uid(),e,n:cap(n),obj,have:0});save();render();toast("Meta creada ✓")}
+async function addToGoal(g,amount){let a=amount;if(a==null){const v=await ask(`${g.e} ${g.n}`,"¿Cuánto apartas?",[["Cantidad (€)","money"]],"Apartar");if(!v)return;a=num(v[0])}
+ if(!(a>0)){toast("Pon una cantidad");return}const was=g.have>=g.obj;g.have=Math.round((g.have+a)*100)/100;save();render();
+ if(!was&&g.have>=g.obj)say("¡Meta conseguida! 🎉",`<p>Has juntado <b>${money(g.have)}</b> para <b>${esc(g.n)}</b>. ¡Enhorabuena, ${esc(myName)}!</p>`);else toast(`+${money(a)} para ${g.n} ✓`)}
+function editGoal(g){const d=overlay(`<div class="dlg"><div class="sh2"><h3>${esc(g.e)} ${esc(g.n)}</h3><button class="x">×</button></div>
+  <label class="fld"><span>Nombre</span><input id="gN" type="text" maxlength="30" value="${esc(g.n)}"></label>
+  <label class="fld"><span>Objetivo (€)</span><input id="gO" type="text" inputmode="decimal" value="${String(g.obj).replace(".",",")}"></label>
+  <label class="fld"><span>Llevo apartado (€)</span><input id="gH" type="text" inputmode="decimal" value="${String(g.have).replace(".",",")}"></label>
+  <button class="btn ok" style="max-width:none">Guardar</button><button class="del">Borrar meta</button></div>`,true);
+ d.querySelector(".x").onclick=()=>d.remove();
+ d.querySelector(".ok").onclick=()=>{const n=d.querySelector("#gN").value.trim(),o=num(d.querySelector("#gO").value),h=num(d.querySelector("#gH").value);
+  if(n)g.n=n;if(o>0)g.obj=o;if(h>=0)g.have=h;save();render();d.remove()};
+ d.querySelector(".del").onclick=async()=>{d.remove();if(await confirmD("Borrar meta",`¿Borrar «${g.n}»?`,"Borrar")){D.goals=D.goals.filter(x=>x!==g);save();render()}}}
+
+/* ---------- ¿En qué fallo?: avisos sacados de sus propios datos ---------- */
+function tips(mk,it){const T=[],out=sum(it,"out"),inc=sum(it,"in"),now=new Date(),isNow=mk===dk(now).slice(0,7);
+ const prev=[1,2,3].map(i=>{const d=new Date(cur.getFullYear(),cur.getMonth()-i,1);return monthItems(`${d.getFullYear()}-${pad(d.getMonth()+1)}`)}).filter(x=>x.some(m=>m.t==="out"));
+ const by=a=>{const r={};a.filter(m=>m.t==="out").forEach(m=>r[m.c]=(r[m.c]||0)+m.a);return r},cb=by(it);
+ // Ritmo del mes contra el límite
+ if(isNow&&D.cfg.pres&&out>0){const day=now.getDate(),dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate(),proj=out/day*dim;
+  if(out>D.cfg.pres)T.push(["🚨",`Te has pasado <b>${money(out-D.cfg.pres)}</b> de tu límite de ${money(D.cfg.pres)}.`]);
+  else if(proj>D.cfg.pres*1.05&&day>=5)T.push(["⏱️",`A este ritmo acabarías el mes en <b>${money(proj)}</b>, por encima de tu límite (${money(D.cfg.pres)}). Te quedan ${money(D.cfg.pres-out)} para ${dim-day} días: unos <b>${money((D.cfg.pres-out)/Math.max(1,dim-day))}</b> al día.`])}
+ // Gastas más de lo que entra
+ if(inc>0&&out>inc)T.push(["📉",`Este mes gastas <b>${money(out-inc)}</b> más de lo que ingresas.`]);
+ // Categorías disparadas contra su media
+ if(prev.length){const avg={};prev.forEach(x=>{const b=by(x);for(const c in b)avg[c]=(avg[c]||0)+b[c]/prev.length});
+  Object.keys(cb).filter(c=>avg[c]&&cb[c]>avg[c]*1.3&&cb[c]-avg[c]>=20).sort((a,b)=>(cb[b]-avg[b])-(cb[a]-avg[a])).slice(0,2).forEach(c=>{const[e,n]=catOf("out",c);
+   T.push([e,`En <b>${esc(n)}</b> llevas ${money(cb[c])}, un <b>${Math.round((cb[c]/avg[c]-1)*100)}% más</b> de lo normal (sueles gastar ${money(avg[c])}).`])})}
+ // Una categoría se come gran parte
+ const ks=Object.keys(cb).sort((a,b)=>cb[b]-cb[a]);if(out>=100&&ks.length>=2&&cb[ks[0]]/out>=.35){const[e,n]=catOf("out",ks[0]);if(!T.some(t=>t[1].includes(esc(n))))T.push([e,`<b>${esc(n)}</b> es el <b>${Math.round(cb[ks[0]]/out*100)}%</b> de todo lo que gastas este mes.`])}
+ // Pequeños gastos que suman
+ const small=it.filter(m=>m.t==="out"&&!m.fij&&m.a<10);if(small.length>=6)T.push(["☕",`<b>${small.length} gastos pequeños</b> (menos de 10 €) que juntos suman <b>${money(small.reduce((a,m)=>a+m.a,0))}</b>.`]);
+ // Suscripciones al año
+ const subs=D.fij.filter(f=>(f.t||"out")==="out"&&f.app&&fijActive(f,mk));if(subs.length>=2){const t=subs.reduce((a,f)=>a+f.a,0);T.push(["📱",`Pagas <b>${money(t)}</b> al mes en ${subs.length} apps: <b>${money(t*12)}</b> al año. ¿Usas todas?`])}
+ // Lo bueno también
+ if(prev.length&&out>0){const pavg=prev.reduce((a,x)=>a+sum(x,"out"),0)/prev.length;if(out<pavg*.85&&!(D.cfg.pres&&out>D.cfg.pres))T.push(["👏",`¡Bien! Este mes llevas <b>${money(out)}</b>, por debajo de lo normal (${money(pavg)}).`,1])}
+ if(!T.length)T.push(["✨",it.length?"Todo en orden este mes. Cuando algo se dispare, te avisaré aquí.":"Cuando apuntes gastos te diré aquí dónde se te va el dinero y dónde puedes ahorrar.",1]);
+ $("tips").innerHTML=T.slice(0,4).map(([e,t,g])=>`<div class="tip${g?" good":""}"><i>${e}</i><span>${t}</span></div>`).join("")}
 
 /* ---------- Gráfica: gastos e ingresos de los últimos 6 meses ---------- */
 let chSel=null;
@@ -452,30 +570,36 @@ function chart(){const C_OUT="#2D5DA6",C_IN="#5A9440",ms=[];
 /* ---------- Personalizar la app (lo cambia ella) ---------- */
 const THEMES={azul:["Azul","#163763","#244C82","#FEF4EB","#FFFBF7","#EBDDD0"],rosa:["Rosa","#8E3B5C","#A8557A","#FDF1F3","#FFF8F9","#F0D9DF"],
  verde:["Verde","#2F5B46","#427A5F","#F3F5EE","#FAFBF7","#DCE3D3"],lila:["Lila","#4F3F86","#6A58A6","#F5F1FA","#FBF9FD","#E2DAEE"],gris:["Gris","#2B2F36","#4A515C","#F4F3F1","#FBFAF9","#E2DFDA"]};
-const SECS=[["cats","¿En qué se va?","secCats"],["chart","Gráfica de 6 meses","secChart"],["mov","Movimientos","secMov"],["fij","Gastos fijos","secFij"],["greet","Saludo de arriba","greet"]];
+const SECS=[["goals","Mis metas","secGoals"],["cats","¿En qué se va?","secCats"],["tips","¿En qué fallo?","secTips"],["chart","Gráfica de 6 meses","secChart"],["mov","Movimientos","secMov"],["fij","Gastos fijos","secFij"],["greet","Saludo de arriba","greet"]];
 const DEF_UI=()=>({title:"Mis gastos",theme:"azul",chart:"line",hide:{}});
 function applyUI(){const u=D.ui,t=THEMES[u.theme]||THEMES.azul,r=document.documentElement.style;
  r.setProperty("--navy",t[1]);r.setProperty("--navy2",t[2]);r.setProperty("--cream",t[3]);r.setProperty("--card",t[4]);r.setProperty("--line",t[5]);
  document.querySelector('meta[name="theme-color"]').setAttribute("content",t[3]);
  $("appT").textContent=u.title||"Mis gastos";document.title=u.title||"Mis gastos";
+ if(u.name&&u.name!==myName){myName=u.name;try{ls.setItem("afm-name",myName)}catch(e){}}
+ $("greet").textContent=SEAS.sp?SEAS.msg:`${hello()}, ${myName} ${SEAS.fx[0]}`;
  SECS.forEach(([k,,id])=>$(id).classList.toggle("hide",!!u.hide[k]))}
 function editSheet(){const o=overlay(`<div class="sheet"><div class="sh2"><h3>Personaliza tu app</h3><button class="x">×</button></div>
+  <label class="fld opt"><span>Tu nombre</span><input id="uN" type="text" maxlength="20" autocapitalize="words"></label>
   <label class="fld opt"><span>Nombre de la app</span><input id="uT" type="text" maxlength="24" autocapitalize="sentences"></label>
+  <div class="opt"><span>Ambiente</span><button class="tg" id="uFx"><span>${SEAS.fx[0]} Decoración de temporada y fiestas</span><b></b></button></div>
   <div class="opt"><span>Color</span><div class="sw" id="uC"></div></div>
   <div class="opt"><span>Gráfica</span><div class="seg" id="uG" style="margin:0"><button data-g="line">📈 Línea</button><button data-g="bar">📊 Barras</button></div></div>
   <div class="opt"><span>Qué se ve</span><div id="uS"></div></div>
   <button class="btn" id="uOk" style="max-width:none">Listo</button><button class="del" id="uReset" style="color:var(--muted)">Volver al diseño original</button></div>`);
  const close=()=>{o.remove();render()};o.querySelector(".x").onclick=close;o.querySelector("#uOk").onclick=close;o.onclick=e=>{if(e.target===o)close()};
- const paint=()=>{const u=D.ui;o.querySelector("#uT").value=u.title;
+ const paint=()=>{const u=D.ui;o.querySelector("#uT").value=u.title;o.querySelector("#uN").value=myName;o.querySelector("#uFx").classList.toggle("on",fxOn());
   o.querySelector("#uC").innerHTML=Object.entries(THEMES).map(([k,t])=>`<button data-k="${k}" class="${u.theme===k?"on":""}"><i style="background:linear-gradient(135deg,${t[1]} 50%,${t[3]} 50%)"></i>${t[0]}</button>`).join("");
   o.querySelectorAll("#uG button").forEach(b=>b.classList.toggle("on",b.dataset.g===u.chart));
   o.querySelector("#uS").innerHTML=SECS.map(([k,n])=>`<button class="tg${u.hide[k]?"":" on"}" data-s="${k}"><span>${n}</span><b></b></button>`).join("")};
  const upd=()=>{save();applyUI();render();paint()};paint();
  o.querySelector("#uT").oninput=e=>{D.ui.title=e.target.value.trim().slice(0,24)||"Mis gastos";save();applyUI()};
+ o.querySelector("#uN").oninput=e=>{const n=e.target.value.trim().slice(0,20);if(!n)return;D.ui.name=n;save();applyUI()};
+ o.querySelector("#uFx").onclick=()=>{try{ls.setItem("afm-fx",fxOn()?"0":"1")}catch(e){}paintFx();paint()};
  o.querySelector("#uC").onclick=e=>{const b=e.target.closest("button");if(b){D.ui.theme=b.dataset.k;upd()}};
  o.querySelector("#uG").onclick=e=>{const b=e.target.closest("button");if(b){D.ui.chart=b.dataset.g;upd()}};
  o.querySelector("#uS").onclick=e=>{const b=e.target.closest("button");if(b){const k=b.dataset.s;D.ui.hide[k]=!D.ui.hide[k];upd()}};
- o.querySelector("#uReset").onclick=()=>{D.ui=DEF_UI();upd();toast("Diseño original ✓")}}
+ o.querySelector("#uReset").onclick=()=>{const n=D.ui.name;D.ui=DEF_UI();if(n)D.ui.name=n;try{ls.removeItem("afm-fx")}catch(e){}paintFx();upd();toast("Diseño original ✓")}}
 
 /* ---------- Fotos de tickets: reducidas y cifradas en el móvil ---------- */
 const pdb=fn=>new Promise((ok,ko)=>{const r=indexedDB.open("afm-photos",1);r.onupgradeneeded=()=>r.result.createObjectStore("p");r.onerror=()=>ko(r.error);
@@ -614,7 +738,7 @@ const HELP=`Puedo apuntar y cambiar cosas de la app. Escríbeme así:<ul>
 <li><b>tengo Spotify 11,99</b> · <b>quita Netflix</b></li><li><b>límite 600</b> · <b>quita el límite</b></li>
 <li><b>cuánto llevo en ropa</b> · <b>cuánto me queda</b></li><li><b>busca academia</b></li>
 <li><b>gráfica de barras</b> · <b>gráfica de línea</b></li><li><b>ponla en rosa</b> · <b>llámala Mis cuentas</b> · <b>oculta la gráfica</b></li>
-<li><b>borra el último</b> · <b>copia de seguridad</b> · <b>bloquear</b></li></ul>También puedes tocar <b>✏️</b> arriba para personalizarla.`;
+<li><b>meta viaje 800</b> · <b>aparta 50 para viaje</b></li><li><b>guarda copia</b> · <b>carga copia</b></li><li><b>borra el último</b> · <b>bloquear</b></li></ul>También puedes tocar <b>✏️</b> arriba para personalizarla.`;
 function findCat(name,t){const q=norm(name).replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();if(!q)return null;
  const ts=t?[t]:["out","in"];for(const tt of ts){const L=catsOf(tt),E=Object.entries(L);
   const f=E.find(([,x])=>norm(x[1])===q)||E.find(([,x])=>norm(x[1]).startsWith(q)||q.startsWith(norm(x[1])))||E.find(([,x])=>norm(x[1]).split(/\s+/).some(w=>w.length>=4&&q.split(" ").includes(w)));
@@ -642,6 +766,9 @@ function command(v){const s=norm(v).replace(/[¿?¡!.]/g,"").trim();let m;const 
   if(f.k===FALL[f.t])return "Esa no se puede borrar: es donde van los apuntes sin categoría.";const L=catsOf(f.t),n=L[f.k][1],fb=FALL[f.t];
   D.mov.forEach(x=>{if((x.t==="in"?"in":"out")===f.t&&x.c===f.k)x.c=fb});D.fij.forEach(x=>{if(((x.t||"out")==="in"?"in":"out")===f.t&&x.c===f.k)x.c=fb});
   delete L[f.k];filt="all";save();render();return `Hecho ✓ Borrada «${esc(n)}». Sus apuntes pasan a «${esc(catOf(f.t,fb)[1])}».`}
+ if(m=v.match(/^\s*(?:nueva\s+)?meta\s+(?:de\s+|para\s+)?(.+?)\s+(\d+(?:[.,]\d{1,2})?)\s*(?:€|euros?)?\s*$/i)){const n=cap(noEmo(m[1])).slice(0,30);(D.goals=D.goals||[]).push({id:uid(),e:emo(m[1])||"🎯",n,obj:num(m[2]),have:0});save();render();return `Hecho ✓ Meta <b>${esc(n)}</b>: juntar ${money(num(m[2]))}. Ve apartando con «aparta 50 para ${esc(n.toLowerCase())}».`}
+ if(m=s.match(/^(?:aparta|apartar|ahorra|ahorro|ahorre|guarda|mete|añade|anade)\s+(\d+(?:[.,]\d{1,2})?)\s*(?:€|euros?)?\s+(?:para|a|en|de)\s+(?:la\s+|el\s+|mi\s+)?(?:meta\s+(?:de\s+)?)?(.+)$/)){const q=m[2].trim(),g=(D.goals||[]).find(x=>norm(x.n)===q)||(D.goals||[]).find(x=>norm(x.n).includes(q)||q.includes(norm(x.n).split(" ")[0]));
+  if(!g)return `No tienes una meta «${esc(m[2])}». Créala con «meta ${esc(m[2])} 500».`;addToGoal(g,num(m[1]));return `Hecho ✓ +${money(num(m[1]))} para <b>${esc(g.n)}</b>. Llevas ${money(g.have)} de ${money(g.obj)}.`}
  if(/^(quita|quitar|borra|sin)\s+(el\s+)?(limite|presupuesto)/.test(s)){D.cfg.pres=0;save();render();return "Hecho ✓ Ya no tienes límite de gasto."}
  if(m=s.match(/^(?:limite|presupuesto|quiero gastar (?:como mucho|maximo)|gastar como mucho|maximo)(?: de| al mes| mensual)?\s*(\d+(?:[.,]\d{1,2})?)/)){D.cfg.pres=num(m[1]);save();render();return `Hecho ✓ Límite de <b>${money(D.cfg.pres)}</b> al mes. Lo verás en la tarjeta de arriba.`}
  if(m=v.match(/^\s*(?:quita|quitar|borra|cancela|cancele|ya no (?:tengo|pago)|he quitado|di de baja)\s+(?:la\s+app\s+|el\s+|la\s+)?(.+)$/i)){const n=norm(m[1]).trim(),f=D.fij.find(x=>x.app&&(!x.to||x.to>=nowMk())&&norm(x.app)===n)||D.fij.find(x=>(!x.to||x.to>=nowMk())&&norm(x.n||"").startsWith(n));
@@ -661,7 +788,8 @@ function command(v){const s=norm(v).replace(/[¿?¡!.]/g,"").trim();let m;const 
   const hits=pool.filter(x=>x.t==="out"&&norm(x.n||"").includes(norm(q)));return hits.length?`En «${esc(q)}» llevas <b>${money(hits.reduce((a,x)=>a+x.a,0))}</b> ${yr?"este año":"este mes"} (${hits.length} apunte${hits.length===1?"":"s"}).`:`No encuentro gastos de «${esc(q)}» ${yr?"este año":"este mes"}.`}
  if(m=v.match(/^\s*(?:busca|buscar|encuentra)\s+(.+)$/i)){const q=norm(m[1]).trim(),hits=D.mov.filter(x=>norm(x.n||"").includes(q)||norm(catOf(x.t,x.c)[1]).includes(q)).sort((a,b)=>b.d.localeCompare(a.d));
   if(!hits.length)return `No encuentro nada con «${esc(m[1])}».`;return `${hits.length} apunte${hits.length===1?"":"s"} · total <b>${money(hits.filter(x=>x.t==="out").reduce((a,x)=>a+x.a,0))}</b><ul>`+hits.slice(0,8).map(x=>`<li>${new Date(x.d+"T12:00").toLocaleDateString("es-ES",{day:"numeric",month:"short"})} · ${esc(x.n||catOf(x.t,x.c)[1])} · ${x.t==="in"?"+":"−"}${money(x.a)}</li>`).join("")+"</ul>"}
- if(/^(haz |hacer )?(una )?copia( de seguridad)?$/.test(s)){setTimeout(backup,50);return "Vale, vamos a hacer la copia."}
+ if(/^(haz |hacer |guarda |guardar )?(una |la )?copia( de seguridad)?$/.test(s)){setTimeout(backup,50);return "Vale, vamos a hacer la copia."}
+ if(/^(carga|cargar|restaura|restaurar|recupera|recuperar|sube|subir|anade|añade)\b.*\bcopia\b/.test(s)){setTimeout(()=>$("restF").click(),50);return "Elige el archivo de la copia (mis-gastos-copia-…)."}
  if(/^(bloquea|bloquear|cerrar|salir)$/.test(s)){setTimeout(()=>location.reload(),400);return "Bloqueando…"}
  if(/^(face ?id|huella|activa face ?id|activar face ?id|activa la huella)$/.test(s)){$("cfgB").classList.remove("hide");$("cfgA").textContent="▾";$("bioSet").scrollIntoView({behavior:"smooth",block:"center"});return "Pulsa el botón <b>🙂 Activar Face ID</b> que te he marcado en Ajustes."}
   return null}
@@ -676,6 +804,7 @@ $("qf").onsubmit=e=>{e.preventDefault();const v=$("qi").value.trim();if(!v)retur
 /* ---------- Copias de seguridad (cifradas con el PIN) ---------- */
 async function backup(){const pin=await ask("Copia de seguridad","La copia se cifra con tu PIN. Para restaurarla te lo pedirá.",[["Tu PIN","pin"]],"Hacer copia");if(!pin)return;
  if(!/^\d{4,8}$/.test(pin[0])){toast("PIN no válido");return}
+ try{let w=ub64(meta.wl);if(meta.dv){const dd=await deviceKey(false);w=await unseal(dd,w)}await unseal(await pinKey(pin[0],meta.salt,meta.iter),w)}catch(e){toast("Ese no es tu PIN");return}
  const salt=b64(rnd(16)),key=await pinKey(pin[0],salt,ITER);D.lastBak=Date.now();
  const photos={};for(const x of D.mov.filter(x=>x.ph)){const b=await getPhoto(x.id);if(b)photos[x.id]=b64(new Uint8Array(await b.arrayBuffer()))}
  const file=JSON.stringify({app:"afm-gastos",v:1,salt,iter:ITER,data:await encStr(JSON.stringify(Object.assign({},D,{photos})),key)});
@@ -694,7 +823,8 @@ $("restF").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)
  for(const[id,b]of Object.entries(d.photos||{})){if(!ids.has(id))await putPhotoEnc(id,new Blob([ub64(b)],{type:"image/jpeg"})).catch(()=>{})}delete d.photos;
  (d.mov||[]).forEach(m=>{if(!ids.has(m.id)){D.mov.push(m);n++}});(d.fij||[]).forEach(f=>{if(!fids.has(f.id)){D.fij.push(f);n++}});
  if(!D.cfg.pres&&d.cfg&&d.cfg.pres)D.cfg.pres=d.cfg.pres;
- ["cats","icats"].forEach(k=>{if(d[k])for(const[c,v]of Object.entries(d[k]))if(!D[k][c])D[k][c]=v});save();render();say("Copia restaurada",`<p>Se han recuperado <b>${n}</b> apuntes.</p>`)};
+ if(d.goals){D.goals=D.goals||[];const gi=new Set(D.goals.map(g=>g.id));d.goals.forEach(g=>{if(!gi.has(g.id)){D.goals.push(g);n++}})}
+ ["cats","icats"].forEach(k=>{if(d[k])for(const[c,v]of Object.entries(d[k]))if(!D[k][c])D[k][c]=v});save();render();say("Copia cargada",n?`<p>Se han añadido <b>${n}</b> apunte${n===1?"":"s"} de la copia. Lo que ya tenías sigue igual.</p>`:"<p>Esa copia no tenía nada nuevo: ya tenías todos sus apuntes.</p>")};
 $("csv").onclick=()=>{const it=monthItems(curMk()),q=s=>'"'+String(s).replace(/"/g,'""')+'"';
  const rows=[["Fecha","Tipo","Categoría","Nota","Importe"]].concat(it.map(m=>[m.d,m.t==="in"?"Ingreso":"Gasto",catOf(m.t,m.c)[1],m.n||"",(m.t==="in"?"":"-")+m.a.toFixed(2).replace(".",",")]));
  const blob=new Blob(["﻿"+rows.map(r=>r.map(q).join(";")).join("\r\n")],{type:"text/csv"});const name=`gastos-${curMk()}.csv`,f=new File([blob],name,{type:"text/csv"});
@@ -715,7 +845,7 @@ $("cPres").onchange=()=>{const n=num($("cPres").value);D.cfg.pres=n>0?n:0;save()
 /* ---------- Arranque ---------- */
 let started=false,hiddenAt=0;
 function start(){if(started)return;started=true;applyUI();
- const h=new Date().getHours();$("greet").textContent=(h<14?"Buenos días":h<21?"Buenas tardes":"Buenas noches")+" ✨";paintBio();
+ paintBio();
  $("prevM").onclick=()=>{cur.setMonth(cur.getMonth()-1);render()};$("nextM").onclick=()=>{cur.setMonth(cur.getMonth()+1);render()};
  let sx=0,sy=0;const hero=document.querySelector(".hero");hero.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
  hero.addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){cur.setMonth(cur.getMonth()+(dx<0?1:-1));render()}});
@@ -728,7 +858,10 @@ function start(){if(started)return;started=true;applyUI();
  $("fijL").onclick=e=>{const b=e.target.closest(".mv");if(!b)return;const f=D.fij.find(x=>x.id===b.dataset.fij);if(f)sheet(f,{fij:true})};
  const tog=(btn,body,arr)=>$(btn).onclick=()=>{const h=$(body).classList.toggle("hide");$(arr).textContent=h?"▸":"▾"};
  tog("fijTog","fijB","fijA");tog("cfgTog","cfgB","cfgA");
- $("appsBtn").onclick=appsSheet;$("editBtn").onclick=editSheet;$("bak").onclick=backup;$("catMng").onclick=catsSheet;$("lockBtn").onclick=()=>location.reload();
+ $("appsBtn").onclick=appsSheet;
+ $("goals").onclick=e=>{const t=e.target.closest("[data-tpl]");if(t){newGoal(t.dataset.tpl==="new"?null:GTPL[+t.dataset.tpl]);return}
+  const a=e.target.closest("[data-add]");if(a){const g=D.goals.find(x=>x.id===a.dataset.add);if(g)addToGoal(g);return}
+  const c=e.target.closest(".goal");if(c){const g=D.goals.find(x=>x.id===c.dataset.g);if(g)editGoal(g)}};$("editBtn").onclick=editSheet;$("bak").onclick=backup;$("catMng").onclick=catsSheet;$("lockBtn").onclick=()=>location.reload();
  document.addEventListener("visibilitychange",()=>{if(document.hidden)hiddenAt=Date.now();else if(hiddenAt&&Date.now()-hiddenAt>LOCKMIN*60e3)location.reload()});
  render();
  if(!D.lastBak&&D.mov.length>=15||D.lastBak&&Date.now()-D.lastBak>21*864e5)setTimeout(()=>toast("Hace tiempo sin copia de seguridad. Hazla en Ajustes."),1500)}
