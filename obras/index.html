@@ -1033,6 +1033,33 @@ async function guardarArchivo(name,blob){
 const params=new URLSearchParams(location.search);
 if(params.get('f'))paginaFirma(params.get('f'));else iniciarDueño();
 
+const HK='jr-obras-huella';let recienEntrado=false,desbloqueado=false;
+const hGet=()=>{try{return localStorage.getItem(HK)}catch(e){return null}};
+const hSet=v=>{try{v?localStorage.setItem(HK,v):localStorage.removeItem(HK)}catch(e){}};
+const b64=buf=>btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const unb64=t=>Uint8Array.from(atob(t.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+async function huellaDisponible(){try{return !!(window.PublicKeyCredential&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())}catch(e){return false}}
+async function activarHuella(){const cred=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'JR - OBRAS'},
+  user:{id:crypto.getRandomValues(new Uint8Array(16)),name:OWNER,displayName:'JR - OBRAS'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+  authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'discouraged'},timeout:60000}});hSet(b64(cred.rawId))}
+async function pedirHuella(){await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:unb64(hGet()),transports:['internal']}],userVerification:'required',timeout:60000}})}
+function ocultarNav(v){document.querySelector('.bottom').hidden=v;document.querySelector('.top .icon-btn').hidden=v}
+function pantallaHuella(ok){ocultarNav(true);
+  $('#app').innerHTML=`<section class="card" style="margin-top:40px;justify-items:center;text-align:center;gap:18px">
+   <svg viewBox="0 0 24 24" width="72" height="72" fill="none" stroke="var(--pine)" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 11v3a8 8 0 0 1-1.5 4.7M8.6 21a12 12 0 0 0 1.4-3M5.5 18.4A12 12 0 0 0 6 14v-2a6 6 0 0 1 9-5.2M18 12v2a16 16 0 0 1-.5 4M15 13.5V12a3 3 0 0 0-6 0v2a14 14 0 0 1-1 5.3M3.5 15.5A12 12 0 0 0 4 12a8 8 0 0 1 15.5-2.8M20 14.5v-.5"/></svg>
+   <h2>JR - OBRAS</h2><button class="btn pri" id="hu-btn" style="width:100%">Entrar con huella</button>
+   <button class="btn sm" id="hu-pass">Entrar con contraseña</button></section>`;
+  $('#hu-btn').onclick=async()=>{try{await pedirHuella();desbloqueado=true;ocultarNav(false);ok()}catch(e){toast('No se ha reconocido. Prueba otra vez.')}};
+  $('#hu-pass').onclick=()=>{hSet(null);firebase.auth().signOut()};
+  setTimeout(()=>$('#hu-btn')&&$('#hu-btn').click(),300);
+}
+function ofrecerHuella(ok){ocultarNav(true);
+  $('#app').innerHTML=`<section class="card" style="margin-top:40px;text-align:center;gap:16px"><h2>¿Entrar con huella?</h2>
+   <p class="muted" style="margin:0">Así no tendrás que poner la contraseña nunca más en este móvil.</p>
+   <button class="btn pri" id="of-si">Activar huella</button><button class="btn" id="of-no">Ahora no</button></section>`;
+  $('#of-si').onclick=async()=>{try{await activarHuella();toast('Huella activada');desbloqueado=true;ocultarNav(false);ok()}catch(e){toast('No se ha podido activar la huella.');ocultarNav(false);ok()}};
+  $('#of-no').onclick=()=>{ocultarNav(false);ok()};
+}
 function pantallaLogin(msg){
   document.querySelector('.bottom').hidden=true;document.querySelector('.top .icon-btn').hidden=true;
   $('#app').innerHTML=`<section class="card" style="margin-top:24px"><h2>Entrar</h2>${msg?`<div class="notice">${esc(msg)}</div>`:''}
@@ -1041,7 +1068,7 @@ function pantallaLogin(msg){
    <button class="btn pri" id="lg-btn">Entrar</button>
    <button class="btn sm" id="lg-reset">He olvidado la contraseña</button></section>`;
   $('#lg-btn').onclick=async()=>{const b=$('#lg-btn');b.disabled=true;b.textContent='Entrando…';
-    try{await firebase.auth().signInWithEmailAndPassword($('#lg-email').value.trim(),$('#lg-pass').value)}
+    try{recienEntrado=true;await firebase.auth().signInWithEmailAndPassword($('#lg-email').value.trim(),$('#lg-pass').value)}
     catch(e){pantallaLogin(e.code==='auth/network-request-failed'?'Sin conexión. Revisa internet.':'Email o contraseña incorrectos.')}};
   $('#lg-pass').onkeydown=e=>{if(e.key==='Enter')$('#lg-btn').click()};
   $('#lg-reset').onclick=async()=>{try{await firebase.auth().sendPasswordResetEmail($('#lg-email').value.trim());toast('Te he mandado un email para cambiarla.')}catch(e){toast('No se ha podido mandar el email.')}};
@@ -1051,8 +1078,12 @@ function iniciarDueño(){
   firebase.auth().onAuthStateChanged(u=>{
     if(!u){pantallaLogin();return}
     if((u.email||'').toLowerCase()!==OWNER){firebase.auth().signOut();pantallaLogin('Esta cuenta no tiene acceso.');return}
-    document.querySelector('.bottom').hidden=false;document.querySelector('.top .icon-btn').hidden=false;
-    if(started)return;started=true;db=fdb;S.dbOk=true;render();
+    if(hGet()&&!desbloqueado&&!recienEntrado){pantallaHuella(arrancar);return}
+    if(!hGet()&&recienEntrado){recienEntrado=false;huellaDisponible().then(d=>d?ofrecerHuella(arrancar):(ocultarNav(false),arrancar()));return}
+    ocultarNav(false);arrancar();
+  });
+  function arrancar(){
+    if(started){render();return}started=true;db=fdb;S.dbOk=true;render();
     const got=new Set();const timer=setTimeout(()=>{if(!S.loaded){S.slow=true;render()}},10000);
     const done=(k,snap)=>{if(!snap.metadata.fromCache)got.add(k);if(got.size>=4&&!S.loaded){S.loaded=true;S.slow=false;clearTimeout(timer)}};
     const err=e=>{console.error(e);clearTimeout(timer);S.loaded=true;S.slow=false;S.dbOk=false;render()};
@@ -1064,7 +1095,7 @@ function iniciarDueño(){
     db.collection('trabajos').onSnapshot(q=>{S.trabajos=q.docs.map(d=>({id:d.id,...d.data()}));done('tr',q);render()},err);
     db.collection('firmas').where('estado','==','aceptado').onSnapshot(q=>{q.docs.forEach(f=>{const F=f.data();const d=S.docs.find(x=>x.id===F.docId);
       if(d&&!d.firma){db.collection('docs').doc(d.id).set({...strip(d),estado:'aceptado',firma:F.firma,firmadoPor:F.firmadoPor||'',firmadoEn:F.firmadoEn||Date.now()}).then(()=>toast(`¡${F.firmadoPor||'El cliente'} ha firmado el presupuesto ${d.numero}!`)).catch(console.error)}})},e=>console.error(e));
-  });
+  }
 }
 async function paginaFirma(token){
   document.querySelector('.bottom').hidden=true;document.querySelector('.top .icon-btn').hidden=true;
