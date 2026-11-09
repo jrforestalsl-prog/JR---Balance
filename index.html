@@ -361,6 +361,7 @@ label{display:block;color:#56616F;font-size:13px;font-weight:800;margin:12px 0 7
 <label>Fecha de alta en la empresa</label><input class="in" type="date" id="pAlta">
 <div class="two"><div><label>Sueldo bruto al mes</label><input class="in" id="pBruto" inputmode="decimal" placeholder="0,00 €"></div><div><label>Pagas al año</label><input class="in" id="pPagas" inputmode="numeric"></div></div>
 <div class="two"><div><label>Precio hora extra</label><input class="in" id="pPhx" inputmode="decimal" placeholder="0,00 €"></div><div><label>Vacaciones/año (días)</label><input class="in" id="pVac" inputmode="numeric"></div></div>
+<label>Contrato de cuántos meses (0 si es fijo)</label><input class="in" id="pCont" inputmode="numeric" placeholder="0">
 <div class="row2"><button class="del" id="pDel">Borrar</button><button class="red" id="pSave">Guardar datos</button></div></div>
 <div class="seg" id="eSeg"><button data-t="hx">Horas extra</button><button data-t="vac">Vacaciones</button><button data-t="baja">Malo</button><button data-t="perm">Personales</button><button data-t="falta">No viene</button><button data-t="comp">Por horas</button></div>
 <div class="law" id="eLaw"></div>
@@ -1086,21 +1087,29 @@ const CH=4;
 // Unpaid day: annual gross (with extra pays) spread over 365 days.
 const dayPay=e=>(e.bruto||0)*(e.pagas||14)/365;
 let eId=null,eT="hx";
+// Una vez: Rubén, Hermógenes y Ángel tienen contrato de 6 meses desde el 7-9-2026.
+(()=>{if(getS("jrforestal-mig-cont"))return;const N=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();let ch=false;
+ emp=emp.map(e=>{if(e.cont!=null||!/^(ruben|hermogenes|angel)\b/.test(N(e.name)))return e;const it={...e,cont:6,alta:e.alta||"2026-09-07"};touch("emp",it);ch=true;return it});
+ if(ch)persistE();setS("jrforestal-mig-cont","1")})();
 function empStats(e,y){const ab=(t,f)=>aus.filter(x=>x.emp===e.id&&x.type===t&&(!f||x.mot===f)).reduce((s,x)=>s+clipY(x.from,x.to,y),0);
  const yd=nd(`${y}-01-01`,`${y}-12-31`);let ent=e.vac||30,pent=6;
  if(e.alta){if(e.alta>`${y}-12-31`)ent=pent=0;else if(e.alta>=`${y}-01-01`){const k=nd(e.alta,`${y}-12-31`)/yd;ent=Math.round(ent*k);pent=Math.round(pent*k)}}
- const hs=hxOf(e.id,String(y)),vac=ab("vac"),prop=ab("perm","propio");return{hs,ent,vac,left:ent-vac,pent,prop,pleft:pent-prop,baja:ab("baja"),perm:ab("perm"),fm:ab("perm","fm"),falta:ab("falta"),comp:ab("comp"),hleft:hs-ab("comp")*CH}}
+ let vac=ab("vac"),cfin="";
+ // Contrato temporal: 2,5 días por mes de contrato, contados en todo el contrato (no por año).
+ if(e.cont>0&&e.alta){const f=dd(e.alta);f.setMonth(f.getMonth()+e.cont);f.setDate(f.getDate()-1);cfin=dk(f.getFullYear(),f.getMonth(),f.getDate());ent=Math.round(2.5*e.cont);
+  vac=aus.filter(x=>x.emp===e.id&&x.type==="vac").reduce((t,x)=>{const a=x.from<e.alta?e.alta:x.from,b=x.to>cfin?cfin:x.to;return t+(a>b?0:nd(a,b))},0)}
+ const hs=hxOf(e.id,String(y)),prop=ab("perm","propio");return{hs,ent,vac,left:ent-vac,cfin,pent,prop,pleft:pent-prop,baja:ab("baja"),perm:ab("perm"),fm:ab("perm","fm"),falta:ab("falta"),comp:ab("comp"),hleft:hs-ab("comp")*CH}}
 const byName=(a,b)=>a.name.localeCompare(b.name,"es");
 function renderEmp(){const y=cur.getFullYear();$("empY").textContent=`Año ${y} · toca para apuntar`;
  $("empL").innerHTML=emp.slice().sort(byName).map(e=>{const s=empStats(e,y);
   return `<button class="emp" data-id="${e.id}"><div class="en">${esc(e.name)}</div><div class="eg"><span${s.hs>80?' class="w"':""}><b>${fh(s.hs)}</b>/80 h extra</span><span${s.left<0?' class="w"':""}>Vacaciones <b>${s.vac}</b>/${s.ent} · quedan <b>${s.left}</b></span><span>Malo <b>${s.baja}</b> d</span><span${s.pleft<0?' class="w"':""}>Personales <b>${s.prop}</b>/${s.pent} · quedan <b>${s.pleft}</b></span>${s.comp?`<span${s.hleft<0?' class="w"':""}>Compensa <b>${s.comp}</b> d · le quedan <b>${fh(s.hleft)}</b> h extra</span>`:""}${s.falta?`<span class="w">No viene <b>${s.falta}</b> d${e.bruto?` · −${money(s.falta*dayPay(e))}`:""}</span>`:""}</div></button>`}).join("")||'<div class="ann"><div class="e">Sin empleados.</div></div>'}
 $("empL").onclick=e=>{const b=e.target.closest(".emp");if(b)openEmp(b.dataset.id)};
 $("addEmp").onclick=()=>{const n=(prompt("Nombre del empleado")||"").trim();if(!n)return;
- const it={id:"emp-"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:n,alta:"",bruto:0,pagas:14,phx:0,vac:30};touch("emp",it);emp=[...emp,it];persistE();render();openEmp(it.id,true)};
+ const it={id:"emp-"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:n,alta:"",bruto:0,pagas:14,phx:0,vac:30,cont:0};touch("emp",it);emp=[...emp,it];persistE();render();openEmp(it.id,true)};
 function openEmp(id,prof){eId=id;$("eProf").classList.toggle("hide",!prof);fillProf();setEType(eT);$("emodal").classList.remove("hide");renderSheet()}
 const eCur=()=>emp.find(x=>x.id===eId);
 function fillProf(){const e=eCur();if(!e)return;const f=v=>v?String(v).replace(".",","):"";
- $("pName").value=e.name;$("pAlta").value=e.alta||"";$("pBruto").value=f(e.bruto);$("pPagas").value=e.pagas||14;$("pPhx").value=f(e.phx);$("pVac").value=e.vac||30}
+ $("pName").value=e.name;$("pAlta").value=e.alta||"";$("pBruto").value=f(e.bruto);$("pPagas").value=e.pagas||14;$("pPhx").value=f(e.phx);$("pVac").value=e.vac||30;$("pCont").value=e.cont||0}
 function setEType(t){eT=t;[...$("eSeg").children].forEach(b=>b.classList.toggle("s",b.dataset.t===t));
  const h=t==="hx";$("fFromL").textContent=h?"Día":"Desde";$("fToW").classList.toggle("hide",h);$("fHW").classList.toggle("hide",!h);
  $("fMotW").classList.toggle("hide",t!=="baja"&&t!=="perm");$("fMot").innerHTML=(t==="baja"?BAJA:PERM).map(m=>`<option value="${m[0]}">${m[1]}${m[3]?` · ${m[3]}`:""}</option>`).join("");
@@ -1116,7 +1125,7 @@ function renderSheet(){const e=eCur();if(!e){$("emodal").classList.add("hide");r
  $("eSum").innerHTML=`<div${s.hs>80?' class="w"':""}><b>${fh(s.hs)}</b><span>h extra /80</span></div><div${s.left<0?' class="w"':""}><b>${s.left}</b><span>vacac. quedan</span></div><div><b>${s.baja}</b><span>días malo</span></div><div${s.pleft<0?' class="w"':""}><b>${s.pleft}</b><span>personales quedan</span></div><div${s.falta?' class="w"':""}><b>${s.falta}</b><span>no viene</span></div>`;
  const pr=e.phx?` · ${money(s.hs*e.phx)} a ${money(e.phx)}/h`:" · pon el precio/hora en sus datos";
  $("eLaw").innerHTML={hx:`<b>Por ley máximo 80 horas extra al año</b> (art. 35 ET). Lleva <b>${fh(s.hs)} h</b> en ${y}${pr}. Se pagan como mínimo a precio de hora normal o se compensan con descanso en los 4 meses siguientes. Hay que registrarlas y darle copia con la nómina.${s.hs>80?' <b style="color:#C92820">⚠ Pasa del máximo legal.</b>':""}`,
-  vac:`<b>Le corresponden ${s.ent} días naturales</b> en ${y} (art. 38 ET: mínimo 30 al año${e.alta&&e.alta.startsWith(yr)?", proporcional desde su alta":""}). Ha cogido <b>${s.vac}</b> · quedan <b>${s.left}</b>. No se pueden pagar en dinero salvo al terminar el contrato; se fijan con 2 meses de antelación. Si coinciden con una baja no se pierden.${s.left<0?' <b style="color:#C92820">⚠ Ha cogido más de las que le tocan.</b>':""}`,
+  vac:`${s.cfin?`<b>Contrato de ${e.cont} meses</b> (hasta el ${fdate(s.cfin)}): <b>le corresponden ${s.ent} días naturales</b> en todo el contrato (2,5 por mes).`:`<b>Le corresponden ${s.ent} días naturales</b> en ${y} (art. 38 ET: mínimo 30 al año${e.alta&&e.alta.startsWith(yr)?", proporcional desde su alta":""}).`} Ha cogido <b>${s.vac}</b> · quedan <b>${s.left}</b>. No se pueden pagar en dinero salvo al terminar el contrato; se fijan con 2 meses de antelación. Si coinciden con una baja no se pierden.${s.left<0?' <b style="color:#C92820">⚠ Ha cogido más de las que le tocan.</b>':""}`,
   baja:`<b>Baja por enfermedad</b>: necesita parte médico. Enfermedad común: días 1-3 sin prestación (salvo convenio), del 4 al 15 paga la empresa el 60% de la base, del 16 al 20 la Seguridad Social el 60% y desde el 21 el 75%. Accidente de trabajo: el día del accidente lo paga la empresa y desde el día siguiente el 75%. Las vacaciones que coincidan con la baja no se pierden. En ${y}: <b>${s.baja} días</b>.`,
   perm:`<b>Permisos pagados por ley</b> (art. 37 ET), avisando y justificando:<ul>${PERM.filter(p=>p[0]!=="propio").map(p=>`<li>${p[1]}: <b>${p[3]}</b></li>`).join("")}</ul>Fuerza mayor en ${y}: <b>${s.fm}</b> de 4 días.${s.fm>4?' <b style="color:#C92820">⚠ Pasa de los 4 días.</b>':""} <b>Asuntos propios</b> (convenio jardinería): <b>${s.pent} días</b> en ${y}${e.alta&&e.alta.startsWith(yr)?" (proporcional desde su alta)":""}. Ha cogido <b>${s.prop}</b> · quedan <b>${s.pleft}</b>. Los elige él, avisando al menos 48 h antes.${s.pleft<0?' <b style="color:#C92820">⚠ Ha cogido más de los que le tocan.</b>':""}`,
   comp:`<b>No viene y lo compensa con horas extra</b>: ese día se le paga normal y se le descuentan horas extra. Según el convenio de jardinería, cada hora extra de lunes a sábado vale por 2 horas de descanso, así que <b>1 día libre (8 h) gasta ${CH} h extra</b>. Hechas en ${y}: <b>${fh(s.hs)} h</b> · gastadas <b>${fh(s.comp*CH)} h</b> (${s.comp} d) · le quedan <b>${fh(s.hleft)} h</b>.${s.hleft<0?' <b style="color:#C92820">⚠ Ha librado más de lo que tiene en horas extra.</b>':""} Las horas que se compensan con descanso en los 4 meses siguientes no cuentan para el máximo de 80.`,
@@ -1143,7 +1152,7 @@ $("eList").onclick=e=>{const r=e.target.closest(".er");if(!r||!e.target.closest(
  if(r.dataset.k==="hx")hx=hx.filter(x=>x.id!==id);else aus=aus.filter(x=>x.id!==id);mark(r.dataset.k,id,{del:true});persistE();render()};
 $("pSave").onclick=()=>{const e=eCur();if(!e)return;const name=$("pName").value.trim();if(!name){alert("Escribe el nombre.");return}
  const n=(v,d)=>{const x=num(v);return isFinite(x)&&x>=0?x:d};
- const it={...e,name,alta:$("pAlta").value,bruto:n($("pBruto").value||0,0),pagas:Math.round(n($("pPagas").value,14))||14,phx:n($("pPhx").value||0,0),vac:Math.round(n($("pVac").value,30))||30};
+ const it={...e,name,alta:$("pAlta").value,bruto:n($("pBruto").value||0,0),pagas:Math.round(n($("pPagas").value,14))||14,phx:n($("pPhx").value||0,0),vac:Math.round(n($("pVac").value,30))||30,cont:Math.round(n($("pCont").value||0,0))};
  touch("emp",it);emp=emp.map(x=>x.id===e.id?it:x);persistE();$("eProf").classList.add("hide");render()};
 $("pDel").onclick=()=>{const e=eCur();if(!e||!confirm(`¿Borrar a ${e.name} y todos sus apuntes?`))return;
  hx.filter(x=>x.emp===e.id).forEach(x=>mark("hx",x.id,{del:true}));aus.filter(x=>x.emp===e.id).forEach(x=>mark("aus",x.id,{del:true}));mark("emp",e.id,{del:true});
