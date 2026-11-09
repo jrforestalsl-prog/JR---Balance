@@ -652,6 +652,11 @@ ajustes(){
    <div class="grid2">${inp('Desplazamiento (€/km)','kmPrecio','number')}${inp('Precio mínimo (€)','minimo','number')}</div>
    <div class="grid2">${inp('Hora de operario «a ojo» (€)','tarifaOperario','number')}${inp('Horas de una jornada','jornada','number')}</div>
   </section>
+  <section class="card"><h2>Seguridad</h2>
+   <div class="row"><button class="btn" data-act="huellaon">${hGet()?'Volver a registrar huella':'Activar huella'}</button></div>
+   <label class="f">Añadir otro móvil (pega su código)<input id="mv-code" class="inp" placeholder="Código que sale en el otro móvil"></label>
+   <button class="btn sm" data-act="addmovil">Añadir móvil</button>
+  </section>
   <section class="card"><h2>Números de empresa</h2>
    <p class="muted small" style="margin:0">Para el «Precio de empresa». Coste real de un operario por hora: sueldo + Seguridad Social.</p>
    <div class="grid2">${inp('Coste operario (€/h)','costeOperario','number')}${inp('Gastos generales (%)','gastosGenerales','number')}</div>
@@ -1039,6 +1044,10 @@ async function guardarArchivo(name,blob){
   const file=new File([blob],name,{type:'application/pdf'});
   if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:name});return}catch(e){if(e&&e.name==='AbortError')return}}
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('PDF descargado')}
+Object.assign(ACT,{
+ async huellaon(){try{await activarHuella();toast('Huella activada');render()}catch(e){toast('No se ha podido activar la huella.')}},
+ async addmovil(){const c=($('#mv-code').value||'').trim();if(c.length<10){toast('Pega el código del otro móvil.');return}
+  try{await fdb.doc('config/dueno').update({uids:firebase.firestore.FieldValue.arrayUnion(c)});toast('Móvil añadido');$('#mv-code').value=''}catch(e){console.error(e);toast('No se ha podido añadir.')}}});
 const params=new URLSearchParams(location.search);
 if(params.get('f'))paginaFirma(params.get('f'));else iniciarDueño();
 
@@ -1083,12 +1092,17 @@ function pantallaLogin(msg){
   $('#lg-reset').onclick=async()=>{try{await firebase.auth().sendPasswordResetEmail($('#lg-email').value.trim());toast('Te he mandado un email para cambiarla.')}catch(e){toast('No se ha podido mandar el email.')}};
 }
 function iniciarDueño(){
-  let started=false;
-  firebase.auth().onAuthStateChanged(u=>{
-    if(!u){pantallaLogin();return}
-    if((u.email||'').toLowerCase()!==OWNER){firebase.auth().signOut();pantallaLogin('Esta cuenta no tiene acceso.');return}
-    if(hGet()&&!desbloqueado&&!recienEntrado){pantallaHuella(arrancar);return}
-    if(!hGet()&&recienEntrado){recienEntrado=false;huellaDisponible().then(d=>d?ofrecerHuella(arrancar):(ocultarNav(false),arrancar()));return}
+  let started=false;ocultarNav(true);$('#app').innerHTML='<div class="empty">Abriendo…</div>';
+  firebase.auth().onAuthStateChanged(async u=>{
+    if(!u){try{await firebase.auth().signInAnonymously()}catch(e){console.error(e);$('#app').innerHTML='<div class="notice">No se puede conectar. Revisa internet y vuelve a abrir la app.</div>'}return}
+    const ref=fdb.doc('config/dueno');let snap;
+    try{snap=await ref.get()}catch(e){console.error(e);$('#app').innerHTML='<div class="notice">No se puede conectar con la base de datos. Revisa internet.</div>';return}
+    let primera=false;
+    if(!snap.exists){try{await ref.set({uids:[u.uid],creado:Date.now()});primera=true}catch(e){console.error(e);noAutorizado(u.uid);return}}
+    else if(!(snap.data().uids||[]).includes(u.uid)){noAutorizado(u.uid);return}
+    let preguntado=false;try{preguntado=!!localStorage.getItem('jr-huella-preguntado')}catch(e){}
+    if(hGet()&&!desbloqueado){pantallaHuella(arrancar);return}
+    if(!hGet()&&!preguntado&&await huellaDisponible()){try{localStorage.setItem('jr-huella-preguntado','1')}catch(e){}ofrecerHuella(arrancar);return}
     ocultarNav(false);arrancar();
   });
   function arrancar(){
@@ -1105,6 +1119,13 @@ function iniciarDueño(){
     db.collection('firmas').where('estado','==','aceptado').onSnapshot(q=>{q.docs.forEach(f=>{const F=f.data();const d=S.docs.find(x=>x.id===F.docId);
       if(d&&!d.firma){db.collection('docs').doc(d.id).set({...strip(d),estado:'aceptado',firma:F.firma,firmadoPor:F.firmadoPor||'',firmadoEn:F.firmadoEn||Date.now()}).then(()=>toast(`¡${F.firmadoPor||'El cliente'} ha firmado el presupuesto ${d.numero}!`)).catch(console.error)}})},e=>console.error(e));
   }
+}
+function noAutorizado(uid){ocultarNav(true);
+  $('#app').innerHTML=`<section class="card" style="margin-top:24px"><h2>Este móvil no está dado de alta</h2>
+   <p class="muted" style="margin:0">Para usar la app aquí, abre JR - OBRAS en tu móvil de siempre → Ajustes → «Añadir otro móvil» y pega este código:</p>
+   <textarea class="inp" rows="2" readonly id="na-code">${uid}</textarea>
+   <button class="btn pri" id="na-copy">Copiar código</button><button class="btn" onclick="location.reload()">Ya lo he añadido</button></section>`;
+  $('#na-copy').onclick=()=>{try{navigator.clipboard.writeText(uid).then(()=>toast('Código copiado'),()=>$('#na-code').select())}catch(e){$('#na-code').select()}};
 }
 async function paginaFirma(token){
   document.querySelector('.bottom').hidden=true;document.querySelector('.top .icon-btn').hidden=true;
